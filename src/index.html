@@ -1,9 +1,73 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<title>Chess Engine V2</title>
-</head>
-<body>
-	Hello World
-</body>
+	<head>
+		<title>Chess Engine V2</title>
+		<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+	    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+	    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+	    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"
+	        integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD"
+	        crossorigin="anonymous"></script>
+	    <link rel="stylesheet"
+	      href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
+	      integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU"
+	      crossorigin="anonymous">
+
+	    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+
+	</head>
+	<body>
+	    <div class="game row">
+	        <div id="myBoard" class="col-lg-5"></div>
+	        <div id="myModal" class="pop-outer col-lg-5" style="display:none">
+	            <div class="pop-inner" style="display:none">
+	                <div class="modal-title">Promote to</div>
+	                <div>
+	                    <img id="q" class="promoPiece">
+	                    <img id="r" class="promoPiece">
+	                    <img id="n" class="promoPiece">
+	                    <img id="b" class="promoPiece">
+	                </div>
+	            </div>
+	        </div>
+
+	        <div class="sidebar col-lg-7 row">
+	            <div class="controls row">
+	                <button id="undo-btn" class="btn btn-light btn-lg col">Undo</button>
+	                <button id="reset-btn" class="btn btn-light btn-lg col">Reset</button>
+	            </div>
+	            <div class="moves-bar">
+	                <b>Moves: </b>                
+	                <div id="moves"></div>
+	                <div class="hide" id="thinking-loader">
+	                    <div>AI is Thinking...</div>
+	                    <div class="lds-ripple"><div></div><div></div></div>
+	                </div>
+	                
+	            </div>
+	            <div class="stats">
+	                <div>
+	                    <b>Points balance: </b><span id="points">0</span>
+	                </div>
+	                <div>
+	                    <b>Search Depth: </b>
+	                    <input type="number" name="search-depth" id="sdepth" min=1 max=7>    
+	                    <div>
+	                    	<input type="checkbox" id="morder">Do Move Ordering
+	                    	<!-- <input type="checkbox" id="trans">Use transposition table -->
+	                    </div>
+	                </div>
+	                <div>
+	                    <b>Positions Evaluated: </b><span id="pos-eval">0</span>
+	                </div>
+	                <div>
+	                    <b>Evaluation Speed: </b><span id="speed">0</span> positions/second
+	                </div>
+	                <div id="other-stats">
+	                	
+	                </div>
+	            </div>
+	        </div>
+	    </div>
+	</body>
 </html>

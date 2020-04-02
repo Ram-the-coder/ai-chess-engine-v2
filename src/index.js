@@ -1,2 +1,4 @@
 import "./styles.css";
-alert("Hello from webpack")
+import {startGame} from './App';
+
+startGame();

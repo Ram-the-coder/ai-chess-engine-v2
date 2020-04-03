@@ -49,9 +49,9 @@ export function searchPosition(game, maxDepth) {
 			let bonus = 0;
 
 			if(move === pvMove)
-				bonus += 100000;
+				bonus += 10000000;
 			else if(pvtable.probePvTable(newhash))
-				bonus += 50000;
+				bonus += 5000000;
 			
 			const gameBoard = game.board();
 			let pieceBeingMoved = {};
@@ -71,12 +71,12 @@ export function searchPosition(game, maxDepth) {
 				let toSquare = move.slice(startIndex, startIndex+2);
 				let toSquareCoords = getCoords(toSquare);
 				let capturedPiece = gameBoard[toSquareCoords.i][toSquareCoords.j]; 
-				bonus += Math.abs(getPieceValue(pieceBeingMoved)*10) - Math.abs(getPieceValue(capturedPiece));
+				bonus += (Math.abs(getPieceValue(pieceBeingMoved)*10) - Math.abs(getPieceValue(capturedPiece)))*100;
 				if(prevMove) {
 					startIndex = prevMove.search(/[a-h][1-8]/);
 					let squareOfPieceMovedByOpponent = prevMove.slice(startIndex, startIndex+2);
 					if(squareOfPieceMovedByOpponent === toSquare)
-						bonus += 1001;	
+						bonus += 100100;	
 				}
 			} else {
 				const killers = killerTable.getKillerMoves(history.length);
@@ -84,7 +84,7 @@ export function searchPosition(game, maxDepth) {
 					for(let i=0; i<killers.length; ++i) {
 						if(killers[i].move === move) {
 							// console.log("ki/ller")
-							bonus += 50 - i;	
+							bonus += (50 - i)*100;	
 						}
 					}
 				} else {
@@ -126,8 +126,7 @@ export function searchPosition(game, maxDepth) {
 		}
 
 		if(depth === 0) {
-			const val = evalBoard(game.board());
-			++nodesEvaluated;
+			const val = quiescence(alpha, beta, game, hash);
 			return {val};
 		}
 
@@ -229,6 +228,112 @@ export function searchPosition(game, maxDepth) {
 		}
 	} 
 
+
+	function quiescence(alpha, beta, game, hash) {
+		++nodesEvaluated;
+
+		if(game.in_checkmate()) {
+			// console.log(game.history());
+			++nodesEvaluated;
+			let val = -10000 + (currentDepth - depth);
+			if(game.turn() === 'b')
+				val = -val;
+			return {val};
+		}
+
+		if(game.in_draw() || game.in_stalemate() || game.in_threefold_repetition()) { 
+			++nodesEvaluated;
+			const val = 0;
+			return {val};
+		}
+
+		let score = evalBoard(game.board());
+
+		if(score >= beta)
+			return beta;
+
+		if(score > alpha)
+			alpha = score;
+
+		let capMoves = game.moves().filter(move => move.search(/x/) !== -1);
+
+		if(game.turn() === 'w') {
+			// Max
+			// let score = -Infinity;
+			let bestMove;
+			let oldAlpha = alpha;
+			// let detail = {};
+
+			for(let i=0; i<capMoves.length; ++i) {
+
+				let newhash = recomputeZobristHash(hash, game.board(), capMoves[i], game.turn());
+
+				game.move(capMoves[i]);
+				score = quiescence(alpha, beta, game, newhash);
+				game.undo();
+
+				// score = moveStats.val;
+				// detail[possibleMoves[i]] = {
+				// 	val: score,
+				// 	detail: moveStats.detail
+				// }
+
+				if(score > alpha) {
+
+					if(score >= beta) {
+						++fhf;
+						// return {val: beta, detail};
+						return beta;
+					}
+
+					++fh;
+					alpha = score;
+					bestMove = capMoves[i];
+				}
+
+			}
+
+			if(alpha != oldAlpha) {
+				pvtable.storePvMove(hash, bestMove);
+				// console.log({player: game.turn(), depth, history: game.history(), detail, bestMove, "miniMax": "max"});
+			}
+
+			return alpha;
+		} else {
+			// Min
+			// let score = Infinity;
+			let bestMove;
+			let oldBeta = beta;
+
+			for(let i=0; i<capMoves.length; ++i) {
+
+				let newhash = recomputeZobristHash(hash, game.board(), capMoves[i], game.turn());
+
+				game.move(capMoves[i]);
+				score = quiescence(alpha, beta, game, newhash);
+				game.undo();
+
+				if(score < beta) {
+
+					if(score <= alpha) {
+						++fhf;
+						return alpha;
+					}
+
+					++fh
+					beta = score;
+					bestMove = capMoves[i];
+				}
+			}
+
+			if(beta != oldBeta) {
+				pvtable.storePvMove(hash, bestMove);
+			}
+
+			return beta;
+		}
+	}
+
 	// function alphaBeta(alpha, beta, depth, game, hash) {
 	// 	// console.log("ab");
 	// 	if(depth === 0) {
@@ -287,10 +392,6 @@ export function searchPosition(game, maxDepth) {
 	// 		detail
 	// 	};
 	// }
-
-	function quiescence(alpha, beta) {
-
-	}
 
 }
 

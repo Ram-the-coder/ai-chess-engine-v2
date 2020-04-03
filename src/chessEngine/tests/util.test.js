@@ -1,4 +1,5 @@
 import * as util from '../util';
+import {Chess} from '../chess.js/chess.js';
 
 // getCoords
 const getCoordsTestCases = [
@@ -23,5 +24,22 @@ const getCoordsTestCases = [
 getCoordsTestCases.forEach(testCase => {
 	test('getCoords', () => {
 		expect(util.getCoords(testCase.test)).toEqual(testCase.expected);
+	})
+})
+
+
+const game = new Chess();
+const board = game.board();
+
+const fromSquareTestCases = [
+	{
+		test: [board, 'Nc3', 'w'],
+		expected: {i: 7, j: 1}
+	},
+]
+
+fromSquareTestCases.forEach(testCase => {
+	test('fromSquare(' + testCase.test[1] + ')', () => {
+		expect(util.findFromSquare(...testCase.test)).toEqual(testCase.expected);
 	})
 })

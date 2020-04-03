@@ -30,9 +30,11 @@ function initVariables() {
 	gameParams.game = new Chess();
 
 	// startFEN = "8/8/8/8/8/8/2K2pk1/8 w - - 0 1";
-	// startFEN = "8/2KP2k1/8/8/8/8/8/8 w - - 0 1";
-	if(gameParams.startFEN !== undefined)
-		gameParams.game.load(gameParams.startFEN);
+	// gameParams.startFEN = "8/6B1/1p2p3/3BN2R/3kp1P1/QPRN4/8/1K6 w - - 0 1";
+	if(gameParams.startFEN !== undefined) {
+		console.log(gameParams.game.load(gameParams.startFEN));
+		console.log(gameParams.game.ascii());
+	}
 
 	onDragStart = ChessBoard.onDragStart.bind(gameParams);
 	onDrop = ChessBoard.onDrop.bind(gameParams);

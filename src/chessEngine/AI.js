@@ -1,3 +1,5 @@
+import {searchPosition} from './search';
+
 export function makeRandomMove(game) {
 	var possibleMoves = game.moves();
 	// game over
@@ -9,3 +11,13 @@ export function makeRandomMove(game) {
 	game.move(possibleMoves[randomIdx]);
 	return {nomoves: false, game};
 }
+
+export function makeBestMove(game, maxDepth) {
+	const bestMove = searchPosition(game, maxDepth);	
+	if(!bestMove) 
+		return {nomoves: true, game};	
+
+	game.move(bestMove);
+	return {nomoves: false, game};
+}
+

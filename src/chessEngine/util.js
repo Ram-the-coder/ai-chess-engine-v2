@@ -159,6 +159,50 @@ export function isPromotion(source, target, board, turn) {
   return isP;
 }
 
+export function isCapture(move) {
+    return move.search(/x/) !== -1;
+}
+
+export function findToSquare(move) {
+  let startInd = move.search(/[a-h][1-8]/);
+  if(startInd === -1) 
+    return null; //castling
+  const toSquare = getCoords(move.slice(startInd, startInd+2));
+  return toSquare;
+}
+
+export function getPieceTableIndex(move, turn) {
+  // Assuming move is not castling or such non-standard moves
+  const pieceTableIndex = {
+    'r': 0,
+    'n': 1,
+    'b': 2,
+    'q': 3,
+    'k': 4,
+    'p': 5
+  }
+
+  const isCastlingMove = isCastling(move);
+  if(isCastlingMove !== -1)
+    return isCastlingMove;
+
+  let startInd = move.search(/[KQNRB]([a-h]|[1-8])?x?[a-h][1-8]/);
+  if(startInd === -1)
+    return turn === 'w' ? pieceTableIndex['p'] : pieceTableIndex['p'] + 6;
+  else
+    return turn === 'w' ? pieceTableIndex[(move[0]).toLowerCase()] : pieceTableIndex[move[0].toLowerCase()] + 6 ;
+}
+
+export function isCastling(move) {
+  if(move.search(/0-0-0/) !== -1)
+    return 12; // QUeen side castle
+  else if(move.search(/0-0/) !== -1)
+    return 13; // King side castle
+  else
+    return -1;
+}
+
+
 
 export function findFromSquare(board, move, turn) {
   let startInd = move.search(/[a-h][1-8]/);
@@ -291,7 +335,8 @@ export function findFromSquare(board, move, turn) {
           console.error("Unknown");
           return {i: 0, j: 0};
 
-    case 'n':   if(sameAlpha != -1) {
+    case 'n':   
+          if(sameAlpha != -1) {
             let i = sameAlpha;
             let j1, j2;
             switch(i - toSquare.i) {
@@ -336,7 +381,7 @@ export function findFromSquare(board, move, turn) {
 
           for(let ioff=-2; ioff <= 2; ++ioff) {
             for(let joff=-2; joff <= 2; ++joff) {
-              if(Math.abs(ioff) + Math.abs(joff) != 3)
+              if(Math.abs(ioff) + Math.abs(joff) !== 3)
                 continue;
               let i = toSquare.i + ioff;
               let j = toSquare.j + joff;

@@ -13,7 +13,7 @@ import bP from '../assets/wikipedia/bP.png';
 
 import {isPromotion} from '../chessEngine/util';
 import * as ChessBoardUtil from './ChessBoardUtil';
-import {makeRandomMove} from '../chessEngine/AI';
+import {makeRandomMove, makeBestMove} from '../chessEngine/AI';
 import {startGame} from '../App';
 
 
@@ -33,6 +33,10 @@ export function initGUI() {
 		startGame();
 	});
 
+	// $('#mkmv').click(async (e) => {
+	// 	playWhiteAI();
+	// });
+
 	$('#q').click((e) => {
 		setPromotion('q');
 	});
@@ -50,8 +54,7 @@ export function initGUI() {
 	});
 
 	$('#sdepth').change((e) => {
-		this.searchDepth = e.target.value;
-		console.log(searchDepth);
+		setSearchDepth(e.target.value);
 	});
 
 	$('#morder').change((e) => {
@@ -64,6 +67,22 @@ export function initGUI() {
 	this.board = Chessboard('myBoard', this.config);
 	makeMove = makeMove.bind(this);
 	setPromotion = setPromotion.bind(this);
+	setSearchDepth = setSearchDepth.bind(this);
+	playWhiteAI = playWhiteAI.bind(this);
+}
+
+function setSearchDepth(depth) {
+	this.searchDepth = depth;
+	console.log("depth: " + this.searchDepth);
+}
+
+async function playWhiteAI() {
+	let status;
+	// debugger;
+	({game: this.game, gameOver: this.gameOver, status} = await letAImakeMove(this.game, this.searchDepth));
+	this.board.position(this.game.fen());
+	if(this.gameOver)
+		handleGameOver(status);
 }
 
 export function onDragStart (source, piece, position, orientation) {
@@ -128,7 +147,7 @@ function makeMove() {
 	if(!this.gameOver) {
 		window.setTimeout(async() => {
 			let status;
-			({game: this.game, gameOver: this.gameOver, status} = await letAImakeMove(this.game));
+			({game: this.game, gameOver: this.gameOver, status} = await letAImakeMove(this.game, this.searchDepth));
 			this.board.position(this.game.fen());
 			if(this.gameOver)
 				handleGameOver(status);
@@ -216,9 +235,11 @@ function setPromotion(piece) {
 	this.board.position(this.game.fen());
 }
 
-async function letAImakeMove(game) {
+async function letAImakeMove(game, searchDepth) {
 	let nomoves;
-	({nomoves, game} = await makeRandomMove(game));
+	// makeBestMove(game);
+	// ({nomoves, game} = await makeRandomMove(game));
+	({nomoves, game} = await makeBestMove(game, searchDepth));
 	ChessBoardUtil.updateMoves(game.board(), game.history());
 	let gameOver, status;
 	({gameOver, status} = ChessBoardUtil.checkGameEnd(game));

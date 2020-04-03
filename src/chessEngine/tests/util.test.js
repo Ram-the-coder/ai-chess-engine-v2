@@ -43,3 +43,17 @@ fromSquareTestCases.forEach(testCase => {
 		expect(util.findFromSquare(...testCase.test)).toEqual(testCase.expected);
 	})
 })
+
+
+
+test('queen side castling', () => {
+	expect(util.isCastling('O-O-O')).toBe(12);
+});
+
+test('king side castling', () => {
+	expect(util.isCastling('O-O')).toBe(13);
+});
+
+test('not castling', () => {
+	expect(util.isCastling('Ncxe4')).toBe(-1);
+})

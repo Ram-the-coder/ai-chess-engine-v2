@@ -1,4 +1,4 @@
-import {evalBoard, getCoords, getPieceValue, isCapture} from './util';
+import {evalBoard, getCoords, getPieceValue, isCapture, getPieceTableIndex} from './util';
 // import PvTable from './pvtable';
 import KillerTable from './killer';
 import HistoryHeuristic from './historyHeuristic';
@@ -164,7 +164,33 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient) {
 				let newhash = recomputeZobristHash(hash, game.board(), possibleMoves[i], game.turn());
 
 				game.move(possibleMoves[i]);
-				let moveStats = miniMax(alpha, beta, depth-1, game, newhash, ply+1);
+				let moveStats = miniMax(alpha, alpha+1, depth-1, game, newhash, ply+1);
+				game.undo();
+
+				if(ply) {
+					if(moveStats.val < alpha) {
+						++fhf;
+						if(!isCapture(possibleMoves[i]))
+							killerTable.storeKillerMove(game.history().length, possibleMoves[i]);
+
+						hashTable.storeHashEntry(possibleMoves[i], hash, alpha, HFALPHA, depth, masterAncient);
+						console.log("min cutoff")
+						return {val: alpha, detail};
+					}
+
+					if(moveStats.val > beta) {
+						++fhf;
+						if(!isCapture(possibleMoves[i]))
+							killerTable.storeKillerMove(game.history().length, possibleMoves[i]);
+
+						hashTable.storeHashEntry(possibleMoves[i], hash, beta, HFBETA, depth, masterAncient);
+						console.log("min cutoff")
+						return {val: beta, detail};
+					}				
+				}
+
+				game.move(possibleMoves[i]);
+				moveStats = miniMax(alpha, beta, depth-1, game, newhash, ply+1);
 				game.undo();
 
 				score = moveStats.val;
@@ -376,7 +402,6 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient) {
 			return beta;
 		}
 	}
-
 }
 
 

@@ -194,9 +194,9 @@ export function getPieceTableIndex(move, turn) {
 }
 
 export function isCastling(move) {
-  if(move.search(/0-0-0/) !== -1)
+  if(move.search(/O-O-O/) !== -1)
     return 12; // QUeen side castle
-  else if(move.search(/0-0/) !== -1)
+  else if(move.search(/O-O/) !== -1)
     return 13; // King side castle
   else
     return -1;

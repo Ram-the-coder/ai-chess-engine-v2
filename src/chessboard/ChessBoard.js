@@ -13,7 +13,6 @@ import bP from '../assets/wikipedia/bP.png';
 
 import {isPromotion} from '../chessEngine/util';
 import * as ChessBoardUtil from './ChessBoardUtil';
-import {makeRandomMove, makeBestMove} from '../chessEngine/AI';
 import {startGame} from '../App';
 
 
@@ -69,6 +68,7 @@ export function initGUI() {
 	setPromotion = setPromotion.bind(this);
 	setSearchDepth = setSearchDepth.bind(this);
 	playWhiteAI = playWhiteAI.bind(this);
+	letAImakeMove = letAImakeMove.bind(this);
 }
 
 function setSearchDepth(depth) {
@@ -236,10 +236,9 @@ function setPromotion(piece) {
 }
 
 async function letAImakeMove(game, searchDepth) {
-	let nomoves;
-	// makeBestMove(game);
-	// ({nomoves, game} = await makeRandomMove(game));
-	({nomoves, game} = await makeBestMove(game, searchDepth));
+	let nomoves, stats;
+	({nomoves, game, stats} = await this.chessEngine.makeBestMove(game, searchDepth));
+	$('#other-stats').html(stats);
 	ChessBoardUtil.updateMoves(game.board(), game.history());
 	let gameOver, status;
 	({gameOver, status} = ChessBoardUtil.checkGameEnd(game));

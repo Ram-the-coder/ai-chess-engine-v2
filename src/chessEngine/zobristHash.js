@@ -13,9 +13,9 @@ let collisionCheck = {};
 for(var i=0; i<12; ++i) {
 	piecePositionValue[i] = new Array(64);
 	for(var j=0; j<64; ++j) {
-		var randNum = Math.random()*Math.pow(2, 64);
+		var randNum = Math.random()*Math.pow(2, 53);
 		while(collisionCheck[randNum] !== undefined)
-			randNum = Math.random()*Math.pow(2, 64);
+			randNum = Math.random()*Math.pow(2, 53);
 		collisionCheck[randNum] = 1;
 		piecePositionValue[i][j] = randNum;
 	}

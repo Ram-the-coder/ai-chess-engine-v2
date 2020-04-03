@@ -1,5 +1,6 @@
 import Chess from './chessEngine/chess.js/chess.js';
 import * as ChessBoard from './chessboard/ChessBoard';
+import ChessEngine from './chessEngine/AI';
 
 let gameParams = {}
 let onDragStart, onDrop, onSnapEnd, onMouseoverSquare, onMouseoutSquare, initGUI;
@@ -26,6 +27,7 @@ function initVariables() {
 	gameParams.doOrdering = true;
 	gameParams.useTranspositionTable = true;
 	gameParams.move_cfg = {};
+	gameParams.chessEngine = new ChessEngine();
 
 	gameParams.game = new Chess();
 

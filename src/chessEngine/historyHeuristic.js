@@ -25,14 +25,19 @@ export default class HistoryHeuristic {
 	}
 
 	getHistoryHeuristic(move, turn) {
-		let piece = getPieceTableIndex(move, turn);
-		let toSquare;
-		if(piece < 12)
-			toSquare = findToSquare(move);
-		else
-			toSquare = {i:0, j:0};
+		try {
+			let piece = getPieceTableIndex(move, turn);
+			let toSquare;
+			if(piece < 12)
+				toSquare = findToSquare(move);
+			else
+				toSquare = {i:0, j:0};
 
-		const toSquareIdx = toSquare.i * 8 + toSquare.j;
-		return this.table[piece][toSquareIdx];
+			const toSquareIdx = toSquare.i * 8 + toSquare.j;
+
+			return this.table[piece][toSquareIdx];
+		} catch(e) {
+			debugger;
+		}
 	}
 }

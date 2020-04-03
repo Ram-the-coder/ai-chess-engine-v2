@@ -233,9 +233,8 @@ export function searchPosition(game, maxDepth) {
 		++nodesEvaluated;
 
 		if(game.in_checkmate()) {
-			// console.log(game.history());
 			++nodesEvaluated;
-			let val = -10000 + (currentDepth - depth);
+			let val = -10000 + (currentDepth);
 			if(game.turn() === 'b')
 				val = -val;
 			return {val};
@@ -249,17 +248,16 @@ export function searchPosition(game, maxDepth) {
 
 		let score = evalBoard(game.board());
 
-		if(score >= beta)
-			return beta;
-
-		if(score > alpha)
-			alpha = score;
-
 		let capMoves = game.moves().filter(move => move.search(/x/) !== -1);
 
 		if(game.turn() === 'w') {
 			// Max
-			// let score = -Infinity;
+			if(score >= beta)
+				return beta;
+
+			if(score > alpha)
+				alpha = score;
+
 			let bestMove;
 			let oldAlpha = alpha;
 			// let detail = {};
@@ -272,17 +270,10 @@ export function searchPosition(game, maxDepth) {
 				score = quiescence(alpha, beta, game, newhash);
 				game.undo();
 
-				// score = moveStats.val;
-				// detail[possibleMoves[i]] = {
-				// 	val: score,
-				// 	detail: moveStats.detail
-				// }
-
 				if(score > alpha) {
 
 					if(score >= beta) {
 						++fhf;
-						// return {val: beta, detail};
 						return beta;
 					}
 
@@ -301,7 +292,13 @@ export function searchPosition(game, maxDepth) {
 			return alpha;
 		} else {
 			// Min
-			// let score = Infinity;
+
+			if(score <= alpha)
+				return alpha;
+
+			if(score < beta)
+				beta = score;
+
 			let bestMove;
 			let oldBeta = beta;
 

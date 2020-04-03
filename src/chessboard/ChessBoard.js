@@ -33,9 +33,9 @@ export function initGUI() {
 		startGame();
 	});
 
-	// $('#mkmv').click(async (e) => {
-	// 	playWhiteAI();
-	// });
+	$('#mkmv').click(async (e) => {
+		playWhiteAI();
+	});
 
 	$('#q').click((e) => {
 		setPromotion('q');

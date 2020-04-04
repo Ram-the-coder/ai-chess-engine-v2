@@ -9,7 +9,7 @@ const HFALPHA = 1;
 const HFBETA = 2;
 const HFEXACT = 3;
 
-export function searchPosition(game, searchDepth, hashTable, masterAncient) {
+export function searchPosition(game, searchDepth, hashTable, masterAncient, evalCap) {
 	// Iterative Deepening
 	let bestMove;
 	let bestScore = -Infinity;
@@ -20,12 +20,12 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient) {
 	let historyHeuristic = new HistoryHeuristic();
 	let fh = 0, fhf = 0;
 	const MAX_PLY = 5;
-	const EVAL_CAP = 35000;
+	const EVAL_CAP = evalCap;
 
 
 	startSearch(game);
 
-	return bestMove;
+	return {bestMove, nodesEvaluated};
 
 	function startSearch(game) {
 
@@ -118,8 +118,11 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient) {
 
 	function miniMax(alpha, beta, depth, game, hash, ply) {
 
-		if(nodesEvaluated++ >= EVAL_CAP)
-			return {val: evalBoard(game.board())};
+		if(nodesEvaluated++ >= EVAL_CAP) {
+			const penalty = 1000;
+			console.log("penalty", game.history());
+			return {val: (evalBoard(game.board()) + (game.turn() === 'w' ? penalty : -penalty))};
+		}
 
 		const probe = hashTable.probeHashEntry(hash, alpha, beta, depth);
 
@@ -318,8 +321,11 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient) {
 
 	function quiescence(alpha, beta, game, hash, ply) {
 
-		if(nodesEvaluated++ >= EVAL_CAP)
-			return {val: evalBoard(game.board())};
+		if(nodesEvaluated++ >= EVAL_CAP) {
+			const penalty = 1000;
+			console.log("penalty", game.history());
+			return {val: (evalBoard(game.board()) + (game.turn() === 'w' ? penalty : -penalty))};
+		}
 
 		if(game.in_checkmate()) {
 			++nodesEvaluated;

@@ -24,6 +24,7 @@ function initVariables() {
 	gameParams.killerMoves = Array(300);
 	gameParams.maxKillerMoves = 3;
 	gameParams.searchDepth = 3;
+	gameParams.evalCap = 10000;
 	gameParams.doOrdering = true;
 	gameParams.useTranspositionTable = true;
 	gameParams.move_cfg = {};

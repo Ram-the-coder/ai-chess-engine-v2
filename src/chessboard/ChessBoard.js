@@ -20,8 +20,6 @@ export function initGUI() {
 
 	$('#undo-btn').click((e) => {
 		this.game.undo();
-		if(!this.game.turn() === 'w')
-			this.game.undo();
 		this.board.position(this.game.fen()); 
 		ChessBoardUtil.updateMoves(this.game.board(), this.game.history());			
 	});
@@ -56,19 +54,25 @@ export function initGUI() {
 		setSearchDepth(e.target.value);
 	});
 
-	$('#morder').change((e) => {
-	  this.doOrdering = e.target.checked;
+	$('#ecap').change((e) => {
+		setEvalCap(e.target.value);
 	})
 
 	$('#sdepth').val(this.searchDepth);
-	$('#morder').prop('checked', this.doOrdering);
+	$('#ecap').val(this.evalCap);
 
 	this.board = Chessboard('myBoard', this.config);
 	makeMove = makeMove.bind(this);
 	setPromotion = setPromotion.bind(this);
 	setSearchDepth = setSearchDepth.bind(this);
+	setEvalCap = setEvalCap.bind(this);
 	playWhiteAI = playWhiteAI.bind(this);
 	letAImakeMove = letAImakeMove.bind(this);
+}
+
+function setEvalCap(cap) {
+	this.evalCap = cap;
+	console.log("Eval cap: " + cap);
 }
 
 function setSearchDepth(depth) {
@@ -79,11 +83,18 @@ function setSearchDepth(depth) {
 async function playWhiteAI() {
 	let status;
 	// debugger;
-	({game: this.game, gameOver: this.gameOver, status} = await letAImakeMove(this.game, this.searchDepth));
-	this.board.position(this.game.fen());
-	document.getElementById('ring').play();
-	if(this.gameOver)
-		handleGameOver(status);
+	$('#thinking-loader').toggleClass('hide');
+	setTimeout( async () => {
+		({game: this.game, gameOver: this.gameOver, status} = await letAImakeMove(this.game, this.searchDepth));
+		this.board.position(this.game.fen());
+		$('#thinking-loader').toggleClass('hide');
+		document.getElementById('ring').play();
+		setTimeout(() => {
+			if(this.gameOver)
+				handleGameOver(status);		
+		}, 200);
+	}, 250);
+	
 }
 
 export function onDragStart (source, piece, position, orientation) {
@@ -147,14 +158,20 @@ function makeMove() {
 	}
 
 	if(!this.gameOver) {
-		window.setTimeout(async() => {
+
+		$('#thinking-loader').toggleClass('hide');
+		setTimeout(async () => {
 			let status;
 			({game: this.game, gameOver: this.gameOver, status} = await letAImakeMove(this.game, this.searchDepth));
 			this.board.position(this.game.fen());
+			$('#thinking-loader').toggleClass('hide');
 			document.getElementById('ring').play();
-			if(this.gameOver)
-				handleGameOver(status);
-		}, 250);		
+			setTimeout(() => {
+				if(this.gameOver)
+					handleGameOver(status);		
+			}, 200);
+		}, 250);
+
 	}
 }
 
@@ -240,7 +257,7 @@ function setPromotion(piece) {
 
 async function letAImakeMove(game, searchDepth) {
 	let nomoves, stats;
-	({nomoves, game, stats} = await this.chessEngine.makeBestMove(game, searchDepth));
+	({nomoves, game, stats} = await this.chessEngine.makeBestMove(game, searchDepth, this.evalCap));
 	$('#other-stats').html(stats);
 	ChessBoardUtil.updateMoves(game.board(), game.history());
 	let gameOver, status;

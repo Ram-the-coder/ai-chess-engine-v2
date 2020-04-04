@@ -26,6 +26,7 @@ export default class ChessEngine {
 		const end = new Date().getTime();
 
 		let stats = "<br><b>Time taken: </b> " + (end-start)/1000;
+		console.log(this.hashTable);
 
 		if(!bestMove) 
 			return {nomoves: true, game};	

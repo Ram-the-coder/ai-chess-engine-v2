@@ -19,7 +19,8 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient) {
 	let killerTable = new KillerTable(3);
 	let historyHeuristic = new HistoryHeuristic();
 	let fh = 0, fhf = 0;
-	const MAX_PLY = 10;
+	const MAX_PLY = 5;
+	const EVAL_CAP = 35000;
 
 
 	startSearch(game);
@@ -57,6 +58,8 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient) {
 				bonus += 10000000;
 			else if(hashTable.probePvMove(newhash))
 				bonus += 5000000;
+			else if(hashTable.probeQuiescencePvMove(newhash))
+				bonus += 3000000;
 
 			const gameBoard = game.board();
 			let pieceBeingMoved = {};
@@ -115,6 +118,9 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient) {
 
 	function miniMax(alpha, beta, depth, game, hash, ply) {
 
+		if(nodesEvaluated++ >= EVAL_CAP)
+			return {val: evalBoard(game.board())};
+
 		const probe = hashTable.probeHashEntry(hash, alpha, beta, depth);
 
 		if(probe.hit) {
@@ -124,7 +130,6 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient) {
 
 		if(game.in_checkmate()) {
 			// console.log(game.history());
-			++nodesEvaluated;
 			let val = -10000 + (currentDepth - depth);
 			if(game.turn() === 'b')
 				val = -val;
@@ -132,7 +137,6 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient) {
 		}
 
 		if(game.in_draw() || game.in_stalemate() || game.in_threefold_repetition()) { 
-			++nodesEvaluated;
 			const val = 0;
 			return {val};
 		}
@@ -163,34 +167,29 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient) {
 
 				let newhash = recomputeZobristHash(hash, game.board(), possibleMoves[i], game.turn());
 
-				game.move(possibleMoves[i]);
-				let moveStats = miniMax(alpha, alpha+1, depth-1, game, newhash, ply+1);
-				game.undo();
+				// if(ply && beta < Infinity) {
+				// 	game.move(possibleMoves[i]);
+				// 	let moveStats = miniMax(beta-1, beta, depth-1, game, newhash, ply+1);
+				// 	// console.log("max minwin: ", moveStats.val, beta-1, beta);
+				// 	game.undo();
 
-				if(ply) {
-					if(moveStats.val < alpha) {
-						++fhf;
-						if(!isCapture(possibleMoves[i]))
-							killerTable.storeKillerMove(game.history().length, possibleMoves[i]);
+				// 	detail[possibleMoves[i]] = moveStats.detail;
 
-						hashTable.storeHashEntry(possibleMoves[i], hash, alpha, HFALPHA, depth, masterAncient);
-						console.log("min cutoff")
-						return {val: alpha, detail};
-					}
+				// 	if(moveStats.val >= beta) {
+				// 		++fhf;
+				// 		if(!isCapture(possibleMoves[i]))
+				// 			killerTable.storeKillerMove(game.history().length, possibleMoves[i]);
 
-					if(moveStats.val > beta) {
-						++fhf;
-						if(!isCapture(possibleMoves[i]))
-							killerTable.storeKillerMove(game.history().length, possibleMoves[i]);
+				// 		hashTable.storeHashEntry(possibleMoves[i], hash, beta, HFBETA, depth, masterAncient);
+				// 		// console.log("beta cutoff")
+				// 		return {val: beta, detail};
+				// 	}	
 
-						hashTable.storeHashEntry(possibleMoves[i], hash, beta, HFBETA, depth, masterAncient);
-						console.log("min cutoff")
-						return {val: beta, detail};
-					}				
-				}
+				// 	++fh;			
+				// }
 
 				game.move(possibleMoves[i]);
-				moveStats = miniMax(alpha, beta, depth-1, game, newhash, ply+1);
+				let moveStats = miniMax(alpha, beta, depth-1, game, newhash, ply+1);
 				game.undo();
 
 				score = moveStats.val;
@@ -233,7 +232,7 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient) {
 				hashTable.storeHashEntry(bestMove, hash, alpha, HFALPHA, depth, masterAncient);
 			}
 
-			return {val: alpha, detail};
+ 			return {val: alpha, detail};
 
 		} else {
 			// Min
@@ -246,6 +245,29 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient) {
 			for(let i=0; i<possibleMoves.length; ++i) {
 
 				let newhash = recomputeZobristHash(hash, game.board(), possibleMoves[i], game.turn());
+
+				// if(ply && alpha > -Infinity) {
+				// 	game.move(possibleMoves[i]);
+				// 	let moveStats = miniMax(alpha, alpha+1, depth-1, game, newhash, ply+1);
+				// 	// console.log("min minwin: ", moveStats.val, alpha, alpha+1);
+				// 	game.undo();
+
+				// 	detail[possibleMoves[i]] = moveStats.detail;
+
+				
+				// 	if(moveStats.val <= alpha) {
+				// 		++fhf;
+				// 		if(!isCapture(possibleMoves[i]))
+				// 			killerTable.storeKillerMove(game.history().length, possibleMoves[i]);
+
+				// 		hashTable.storeHashEntry(possibleMoves[i], hash, alpha, HFALPHA, depth, masterAncient);
+				// 		// console.log("alpha cutoff - 2")
+						
+				// 		return {val: alpha, detail};
+				// 	}
+
+				// 	++fh;
+				// }
 
 				game.move(possibleMoves[i]);
 				let moveStats = miniMax(alpha, beta, depth-1, game, newhash, ply+1);
@@ -295,7 +317,9 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient) {
 
 
 	function quiescence(alpha, beta, game, hash, ply) {
-		++nodesEvaluated;
+
+		if(nodesEvaluated++ >= EVAL_CAP)
+			return {val: evalBoard(game.board())};
 
 		if(game.in_checkmate()) {
 			++nodesEvaluated;
@@ -314,6 +338,7 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient) {
 		let score = evalBoard(game.board());
 
 		let capMoves = game.moves().filter(move => move.search(/x/) !== -1);
+		capMoves = orderMoves(capMoves, hash, game);
 
 		if(capMoves.length === 0 || ply >= MAX_PLY - 1)
 			return score;

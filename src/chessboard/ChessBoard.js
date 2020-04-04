@@ -81,6 +81,7 @@ async function playWhiteAI() {
 	// debugger;
 	({game: this.game, gameOver: this.gameOver, status} = await letAImakeMove(this.game, this.searchDepth));
 	this.board.position(this.game.fen());
+	document.getElementById('ring').play();
 	if(this.gameOver)
 		handleGameOver(status);
 }
@@ -121,6 +122,7 @@ export function onDrop (source, target) {
 	// illegal move
 	if (move === null) return 'snapback'
 
+	document.getElementById('ring').play();
 	this.game.undo();
 
 	if(isPromotion(source, target, this.game.board(), this.game.turn())) {
@@ -149,6 +151,7 @@ function makeMove() {
 			let status;
 			({game: this.game, gameOver: this.gameOver, status} = await letAImakeMove(this.game, this.searchDepth));
 			this.board.position(this.game.fen());
+			document.getElementById('ring').play();
 			if(this.gameOver)
 				handleGameOver(status);
 		}, 250);		

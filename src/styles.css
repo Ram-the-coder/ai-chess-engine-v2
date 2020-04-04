@@ -3,14 +3,8 @@ body .row {
 }
 
 .game {
-	/*display: flex;
-	flex-wrap: wrap;*/
 	line-height: 2em;
 	font-family: sans-serif;
-}
-
-#myBoard {
-
 }
 
 .sidebar {
@@ -23,14 +17,6 @@ body .row {
 .stats {
 	display: flex;
 	flex-direction: column;
-}
-
-.controls {
-	/*flex-basis: 10%;*/
-}
-
-.moves-bar {
-	/*flex-basis: 60%;*/
 }
 
 #moves {
@@ -113,24 +99,9 @@ body .row {
 	text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
 }
 
-/*.points {
-	width: 100%;
-	height: 4vh;
-	padding: 1px;
-	display: flex;
-	background: whitesmoke;
+footer {
+	/*font-color: lightgray;*/
+	font-size: 0.75rem;
+	margin-top: 50px;
+	text-align: center;
 }
-
-.white {
-	background: white;
-	height: 100%;
-	border: 2px solid black;
-	width: 50%;
-}
-
-.black {
-	background: black;
-	height: 100%;
-	border: 2px solid black;
-	width: 50%;
-}*/

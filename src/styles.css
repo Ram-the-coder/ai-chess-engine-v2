@@ -19,6 +19,8 @@ body .row {
 	display: flex;
 	flex-direction: column;
 	justify-content: space-around;
+
+	margin-top: 1rem;
 }
 
 #moves {
@@ -134,4 +136,11 @@ footer {
     border: 1px solid #ced4da;
     border-radius: .25rem;
     transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+
+#options-heading {
+	font-size: 1.25rem;
+	font-weight: 750;
+	text-decoration: underline;
+	line-height: 4rem;
 }

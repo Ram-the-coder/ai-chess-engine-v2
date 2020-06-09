@@ -51,23 +51,34 @@ export function initGUI() {
 	});
 
 	$('#sdepth').change((e) => {
-		setSearchDepth(e.target.value);
+		setSearchDepth(parseInt(e.target.value));
 	});
 
 	$('#ecap').change((e) => {
-		setEvalCap(e.target.value);
-	})
+		setEvalCap(parseInt(e.target.value));
+	});
+
+	$('#mply').change((e) => {
+		setMaxPly(parseInt(e.target.value));
+	});
 
 	$('#sdepth').val(this.searchDepth);
 	$('#ecap').val(this.evalCap);
+	$('#mply').val(this.maxPly);
 
 	this.board = Chessboard('myBoard', this.config);
 	makeMove = makeMove.bind(this);
 	setPromotion = setPromotion.bind(this);
 	setSearchDepth = setSearchDepth.bind(this);
 	setEvalCap = setEvalCap.bind(this);
+	setMaxPly = setMaxPly.bind(this);
 	playWhiteAI = playWhiteAI.bind(this);
 	letAImakeMove = letAImakeMove.bind(this);
+}
+
+function setMaxPly(mply) {
+	this.maxPly = mply;
+	console.log("Max Ply: " + mply);
 }
 
 function setEvalCap(cap) {
@@ -257,7 +268,7 @@ function setPromotion(piece) {
 
 async function letAImakeMove(game, searchDepth) {
 	let nomoves, stats;
-	({nomoves, game, stats} = await this.chessEngine.makeBestMove(game, searchDepth, this.evalCap));
+	({nomoves, game, stats} = await this.chessEngine.makeBestMove(game, searchDepth, this.evalCap, this.maxPly));
 	$('#other-stats').html(stats);
 	ChessBoardUtil.updateMoves(game.board(), game.history());
 	let gameOver, status;

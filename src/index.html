@@ -48,17 +48,17 @@
 	                
 	            </div>
 	            <div>
-                    <b>Points balance: </b><span id="points">0</span>
+					<b>Points balance: </b><span id="points">0</span>
                 </div>
 	            <div class="stats">
+					<div id="options-heading">Engine Settings:</div>
 	                <div>
 	                    <b>Search Depth: </b>
 	                    <input type="number" name="search-depth" id="sdepth" class="my-ip" min=1 max=7>    
 	                    <details>	
 	                    	<summary><i>Search Depth?</i></summary>
-	                    	Affects speed and strength of the search engine. Reduce it to make engine faster, however its strength will fall too. Increase it to increase strength, however it will also increase the time taken to perform each move
+	                    	The number of half-moves the AI looks ahead. Affects speed and strength of the search engine. Reduce it to make engine faster, however its strength will fall too. Increase it to increase strength, however it will also increase the time taken to perform each move
 	                    </details>
-	                    <br>
 	                </div>
 	                <div>
 	                	<b>Max Positions to Evaluate: </b>
@@ -66,7 +66,15 @@
 	                    <details>
 	                    	<summary><i>What is this?</i></summary>
 	                    	The maximum number of positions that the chess engine can evaluate. Decreasing this will increase performance and but decreases strength of the engine and vice versa.
-	                    </details>
+						</details>
+					</div>
+					<div>
+	                	<b>Max Depth: </b>
+	                    <input type="number" name="max-ply" id="mply" class="my-ip" min=1 max=10>    
+	                    <details>
+	                    	<summary><i>What is max depth?</i></summary>
+	                    	After searching till the search depth, the AI will continue to follow the attacking moves until it reaches a position where no piece attacks another. By setting max depth, the AI will not look beyond it. Decreasing this will increase performance and but decreases strength of the engine and vice versa.
+						</details>
 	                </div>
 	                <div id="other-stats">
 	                	

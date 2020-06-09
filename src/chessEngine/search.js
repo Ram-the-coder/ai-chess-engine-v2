@@ -9,7 +9,7 @@ const HFALPHA = 1;
 const HFBETA = 2;
 const HFEXACT = 3;
 
-export function searchPosition(game, searchDepth, hashTable, masterAncient, evalCap) {
+export function searchPosition(game, searchDepth, hashTable, masterAncient, evalCap, maxPly) {
 	// Iterative Deepening
 	let bestMove;
 	let bestScore = -Infinity;
@@ -19,10 +19,10 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 	let killerTable = new KillerTable(3);
 	let historyHeuristic = new HistoryHeuristic();
 	let fh = 0, fhf = 0;
-	const MAX_PLY = 10;
-	const EVAL_CAP = evalCap;
+	const MAX_PLY = maxPly ? maxPly : 10;
+	const EVAL_CAP = evalCap ? evalCap : 20000;
 
-	console.log({EVAL_CAP, MAX_PLY});
+	// console.log({EVAL_CAP, MAX_PLY});
 	startSearch(game);
 
 	return {bestMove, nodesEvaluated};

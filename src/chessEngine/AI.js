@@ -19,11 +19,11 @@ export default class ChessEngine {
 		return {nomoves: false, game};
 	}
 
-	makeBestMove(game, maxDepth, evalCap) {
+	makeBestMove(game, maxDepth, evalCap, maxPly) {
 		this.masterAncient = this.masterAncient ? 0 : 1;
 		const start = new Date().getTime();
 		let bestMove, nodesEvaluated;
-		({bestMove, nodesEvaluated} = searchPosition(game, maxDepth, this.hashTable, this.masterAncient, evalCap));	
+		({bestMove, nodesEvaluated} = searchPosition(game, maxDepth, this.hashTable, this.masterAncient, evalCap, maxPly));	
 		const end = new Date().getTime();
 
 		let stats = "<br><b>Positions Evaluated: </b> " + nodesEvaluated +  "<br><b>Time taken: </b> " + ((end-start)/60000).toPrecision(3) + " minutes";

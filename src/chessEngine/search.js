@@ -19,10 +19,10 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 	let killerTable = new KillerTable(3);
 	let historyHeuristic = new HistoryHeuristic();
 	let fh = 0, fhf = 0;
-	const MAX_PLY = 5;
+	const MAX_PLY = 10;
 	const EVAL_CAP = evalCap;
 
-
+	console.log({EVAL_CAP, MAX_PLY});
 	startSearch(game);
 
 	return {bestMove, nodesEvaluated};
@@ -118,9 +118,9 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 
 	function miniMax(alpha, beta, depth, game, hash, ply) {
 
-		if(nodesEvaluated++ >= EVAL_CAP) {
+		if(nodesEvaluated++ >= EVAL_CAP || ply >= MAX_PLY) {
 			const penalty = 1000;
-			console.log("penalty", game.history());
+			// console.log("penalty", game.history());
 			return {val: (evalBoard(game.board()) + (game.turn() === 'w' ? penalty : -penalty))};
 		}
 
@@ -150,10 +150,10 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 			return {val};
 		}
 
-		if(ply >= MAX_PLY - 1) {
-			const val = evalBoard(game.board());
-			return {val};
-		}
+		// if(ply >= MAX_PLY - 1) {
+		// 	const val = evalBoard(game.board());
+		// 	return {val};
+		// }
 
 		let possibleMoves = game.moves();
 		possibleMoves = orderMoves(possibleMoves, hash, game);
@@ -321,9 +321,9 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 
 	function quiescence(alpha, beta, game, hash, ply) {
 
-		if(nodesEvaluated++ >= EVAL_CAP) {
+		if(nodesEvaluated++ >= EVAL_CAP  || ply >= MAX_PLY) {
 			const penalty = 1000;
-			console.log("penalty", game.history());
+			// console.log("penalty", game.history());
 			return {val: (evalBoard(game.board()) + (game.turn() === 'w' ? penalty : -penalty))};
 		}
 
@@ -346,7 +346,7 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 		let capMoves = game.moves().filter(move => move.search(/x/) !== -1);
 		capMoves = orderMoves(capMoves, hash, game);
 
-		if(capMoves.length === 0 || ply >= MAX_PLY - 1)
+		if(capMoves.length === 0)
 			return score;
 
 		if(game.turn() === 'w') {
@@ -368,7 +368,7 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 				let newhash = recomputeZobristHash(hash, game.board(), capMoves[i], game.turn());
 
 				game.move(capMoves[i]);
-				score = quiescence(alpha, beta, game, newhash);
+				score = quiescence(alpha, beta, game, newhash, ply+1);
 				game.undo();
 
 				if(score > alpha) {
@@ -410,7 +410,7 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 				let newhash = recomputeZobristHash(hash, game.board(), capMoves[i], game.turn());
 
 				game.move(capMoves[i]);
-				score = quiescence(alpha, beta, game, newhash);
+				score = quiescence(alpha, beta, game, newhash, ply+1);
 				game.undo();
 
 				if(score < beta) {

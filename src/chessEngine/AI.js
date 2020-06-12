@@ -7,7 +7,7 @@ export default class ChessEngine {
 		this.masterAncient = 0;
 	}
 
-	makeRandomMove(game) {
+	getRandomMove(game) {
 		var possibleMoves = game.moves();
 		// game over
 		if (possibleMoves.length === 0) {
@@ -15,25 +15,18 @@ export default class ChessEngine {
 		}
 
 		var randomIdx = Math.floor(Math.random() * possibleMoves.length);
-		game.move(possibleMoves[randomIdx]);
-		return {nomoves: false, game};
+		return {nomoves: false, move: possibleMoves[randomIdx]};
 	}
 
-	makeBestMove(game, maxDepth, evalCap, maxPly) {
+	getBestMove(game, maxDepth, evalCap, maxPly) {
 		this.masterAncient = this.masterAncient ? 0 : 1;
 		const start = new Date().getTime();
 		let bestMove, nodesEvaluated;
 		({bestMove, nodesEvaluated} = searchPosition(game, maxDepth, this.hashTable, this.masterAncient, evalCap, maxPly));	
 		const end = new Date().getTime();
-
-		let stats = "<br><b>Positions Evaluated: </b> " + nodesEvaluated +  "<br><b>Time taken: </b> " + ((end-start)/60000).toPrecision(3) + " minutes";
+		const timeTaken = ((end-start)/60000).toPrecision(3);
 		// console.log(this.hashTable);
-
-		if(!bestMove) 
-			return {nomoves: true, game};	
-
-		game.move(bestMove);
-		return {nomoves: false, game, stats};
+		return bestMove ? {nomoves: false, move: bestMove, timeTaken, nodesEvaluated} : {nomoves: true};
 	}
 }
 

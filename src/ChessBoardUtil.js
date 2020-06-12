@@ -1,4 +1,4 @@
-import {calculatePointsByPiece} from '../chessEngine/util';
+import {calculatePointsByPiece} from './chessEngine/util';
 
 export function updateMoves(board, history) {
   let str = "";

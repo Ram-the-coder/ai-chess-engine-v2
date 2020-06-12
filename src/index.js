@@ -1,4 +1,4 @@
 import "./styles.css";
-import {startGame} from './App';
+import {newGame} from './App';
 
-startGame();
+newGame();

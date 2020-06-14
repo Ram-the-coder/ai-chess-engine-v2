@@ -13,6 +13,7 @@ function HumanVsEngine() {
 
     const game = useRef(new Chess());
     const chessEngineWorker = useRef();
+
     const [history, setHistory] = useState([]);
     const [searchDepth, setSearchDepth] = useState(3);
     const [maxDepth, setMaxDepth] = useState(5);
@@ -23,22 +24,37 @@ function HumanVsEngine() {
 
     useEffect(() => {
         chessEngineWorker.current = new ChessEngineWorker();
-        chessEngineWorker.current.onmessage = e => console.log(e);
-        chessEngineWorker.current.postMessage({type: "init"});
+        chessEngineWorker.current.onmessage = handleWorkerMessage;
+        chessEngineWorker.current.postMessage({type:'init'});
 
         return () => chessEngineWorker.current.terminate();
     }, []);
 
+    useEffect(() => {
+        if(game.current.turn() !== playerColor) letAiMakeMove(); // AI's turn
+    });
+
+    function letAiMakeMove() {
+        const searchData = {
+            searchDepth,
+            evalCap,
+            maxPly: maxDepth
+        }
+        setTimeout(() => chessEngineWorker.current.postMessage({type: 'search', data: searchData}), 250);
+    }
+
     function undoGame() {
         if(game.current.turn() !== playerColor) return; // Disable undo while AI is thinking
         game.current.undo();
-        let newHistory = [...history];
-        newHistory.pop();
-        if(game.current.turn() !== playerColor) { // Undo the previous move of AI too
-            game.current.undo();
+        setHistory(history => {
+            let newHistory = [...history];
             newHistory.pop();
-        } 
-        setHistory(newHistory);
+            if(game.current.turn() !== playerColor) { // Undo the previous move of AI too
+                game.current.undo();
+                newHistory.pop();
+            }
+            return newHistory;
+        });
     }
 
     function newGame() {
@@ -52,6 +68,21 @@ function HumanVsEngine() {
 
     function switchSides() {
         setPlayerColor(playerColor === 'w' ? 'b' : 'w');
+    }
+
+    function handleWorkerMessage(e) {
+        switch(e.data.type) {
+            case 'search':
+                game.current.move(e.data.data.move);
+                setHistory(history => [...history, e.data.data.move]);
+                break;
+            default: break;
+        }
+    }
+
+    function updateGameState(newHistory) {
+        setHistory(newHistory);
+        chessEngineWorker.current.postMessage({type: 'move', data: newHistory[newHistory.length - 1]});
     }
 
 	return (
@@ -72,7 +103,7 @@ function HumanVsEngine() {
                 <ChessBoard 
                     game = {game.current}
                     history = {history}
-                    updateHistory = {setHistory}
+                    updateHistory = {updateGameState}
                     orientation = {playerColor === 'w' ? 'white' : 'black'}
                 />
             </div>

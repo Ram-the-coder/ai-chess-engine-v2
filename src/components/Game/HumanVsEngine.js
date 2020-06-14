@@ -4,6 +4,7 @@ import Chess from 'chess.js';
 import {calculatePointsByPiece} from '../../chessEngine/util';
 import MoveHistory from './MoveHistory';
 import Modal from './Modal';
+import ChessEngineWorker from '../../chessEngine/engine.worker';
 
 import './HumanVsEngine.css';
 
@@ -11,6 +12,7 @@ import './HumanVsEngine.css';
 function HumanVsEngine() {
 
     const game = useRef(new Chess());
+    const chessEngineWorker = useRef();
     const [history, setHistory] = useState([]);
     const [searchDepth, setSearchDepth] = useState(3);
     const [maxDepth, setMaxDepth] = useState(5);
@@ -18,6 +20,15 @@ function HumanVsEngine() {
     const [isAIthinking, setisAIthinking] = useState(false);
     const [playerColor, setPlayerColor] = useState('w');
     const [openSettings, setOpenSettings] = useState(false);
+
+    useEffect(() => {
+        chessEngineWorker.current = new ChessEngineWorker();
+        chessEngineWorker.current.onmessage = e => console.log(e);
+        chessEngineWorker.current.postMessage("hi");
+        chessEngineWorker.current.postMessage({type: "init"});
+
+        return () => chessEngineWorker.current.terminate();
+    }, [])
 
 	return (
         <div className="game">

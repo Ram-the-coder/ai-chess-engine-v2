@@ -8,9 +8,9 @@ export default function Modal({searchDepth, setSearchDepth, maxDepth, setMaxDept
                     <div className="text-center"><h2>AI Engine Settings</h2></div>
                     <small>Hover over the text for description</small>
                     <small>Changing these values will affect the Speed and the Strength of the chess engine.</small>
-                    <div class="form-group row">
+                    <div className="form-group row">
                         <label 
-                            for="sdepth" 
+                            htmlFor="sdepth" 
                             className = "col-sm-8 col-form-label"
                             title="The least number of moves the engine looks ahead for every move in the current position"
                         > Search Depth:</label>
@@ -23,9 +23,9 @@ export default function Modal({searchDepth, setSearchDepth, maxDepth, setMaxDept
                             onChange = {(e) => setSearchDepth(e.target.value)}
                         />
                     </div>
-                    <div class="form-group row">
+                    <div className="form-group row">
                         <label 
-                            for="mdepth" 
+                            htmlFor="mdepth" 
                             className = "col-sm-8 col-form-label"
                             title="The maximum number of moves the engine looks ahead for every move in the current position"
                         > Max Depth:</label>
@@ -38,9 +38,9 @@ export default function Modal({searchDepth, setSearchDepth, maxDepth, setMaxDept
                             onChange = {(e) => setMaxDepth(e.target.value)}
                         />
                     </div>
-                    <div class="form-group row">
+                    <div className="form-group row">
                         <label 
-                            for="eval-cap" 
+                            htmlFor="eval-cap" 
                             className = "col-sm-8 col-form-label"
                             title="The maximum number of positions the engine will evaluate"
                         > Evaluation Cap:</label>

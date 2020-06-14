@@ -1,4 +1,4 @@
-import Chess from './chess.js/chess.js';
+import Chess from 'chess.js';
 import ChessEngine from './AI';
 
 let game, engine;

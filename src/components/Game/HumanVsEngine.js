@@ -24,11 +24,35 @@ function HumanVsEngine() {
     useEffect(() => {
         chessEngineWorker.current = new ChessEngineWorker();
         chessEngineWorker.current.onmessage = e => console.log(e);
-        chessEngineWorker.current.postMessage("hi");
         chessEngineWorker.current.postMessage({type: "init"});
 
         return () => chessEngineWorker.current.terminate();
-    }, [])
+    }, []);
+
+    function undoGame() {
+        if(game.current.turn() !== playerColor) return; // Disable undo while AI is thinking
+        game.current.undo();
+        let newHistory = [...history];
+        newHistory.pop();
+        if(game.current.turn() !== playerColor) { // Undo the previous move of AI too
+            game.current.undo();
+            newHistory.pop();
+        } 
+        setHistory(newHistory);
+    }
+
+    function newGame() {
+        game.current = new Chess();
+        setHistory([]);
+    }
+
+    function showHint() {
+
+    }
+
+    function switchSides() {
+        setPlayerColor(playerColor === 'w' ? 'b' : 'w');
+    }
 
 	return (
         <div className="game">
@@ -49,15 +73,25 @@ function HumanVsEngine() {
                     game = {game.current}
                     history = {history}
                     updateHistory = {setHistory}
+                    orientation = {playerColor === 'w' ? 'white' : 'black'}
                 />
             </div>
             <div className="sidebar">
                 <div className="controls">
-                    <button className="btn btn-dark controls-half-width">Undo</button>
-                    <button className="btn btn-dark controls-half-width">New Game</button>
-                    <button className="btn btn-dark controls-half-width">Hint</button>
-                    <button className="btn btn-dark controls-half-width">Switch Sides</button>
-                    <button className="btn btn-dark btn-block" onClick={() => setOpenSettings(true)}>AI Settings</button>
+                    <button className="btn btn-dark controls-half-width" 
+                            onClick={() => undoGame()} 
+                            disabled={game.current.turn() !== playerColor}>Undo</button>
+                    <button className="btn btn-dark controls-half-width"
+                            onClick={() => newGame()} 
+                            disabled={game.current.turn() !== playerColor}>New Game</button>
+                    <button className="btn btn-dark controls-half-width"
+                            onClick={() => showHint()} 
+                            disabled={game.current.turn() !== playerColor}>Hint</button>
+                    <button className="btn btn-dark controls-half-width"
+                            onClick={() => switchSides()} 
+                            disabled={game.current.turn() !== playerColor}>Switch Sides</button>
+                    <button className="btn btn-dark btn-block" 
+                            onClick={() => setOpenSettings(true)}>AI Settings</button>
                     <hr className='hr' />
                 </div>
                 <div className="text-center">

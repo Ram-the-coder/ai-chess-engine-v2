@@ -1,0 +1,134 @@
+.game {
+    display: flex;
+    flex-wrap: wrap;
+    position: relative;
+    align-items: center;
+    justify-content: center;
+}
+
+.game > * {
+    margin: 2vw;
+}
+
+.settings-pop-outer {
+	position: absolute!important;
+  	top: 0px;
+  	left: 0px;
+  	right: 0px;
+  	bottom: 0px;
+	background: rgba(0,0,0,0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10;
+	backdrop-filter: blur(2px);
+}
+
+.settings-pop-inner {
+	position: relative;
+	background-color: white;
+}
+
+.settings-wrapper {
+    padding: 5vh 5vw;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    justify-content: center;
+}
+
+.settings-wrapper > * {
+    margin: 1vh;
+}
+
+.settings-wrapper > div > label {
+    text-align: left;
+}
+
+.settings-wrapper > div > label:hover {
+    cursor: pointer;
+}
+
+.chessboard-wrapper {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.controls {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.half-width {
+    width: 45%;
+}
+
+.controls > * {
+    margin: 5px;
+}
+
+.controls-half-width {
+    width: 45%;
+}
+
+.sidebar {
+    width: 300px;
+    min-width: 300px;
+    padding: 10px;
+    background-color: whitesmoke;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    height: min(560px, 80vh);
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+}
+
+.sidebar > * {
+    margin-bottom: 1rem;
+}
+
+.moves {
+    flex-grow: 1;
+    min-height: 75px;
+    font-weight: 500;
+    overflow: auto;
+}
+
+.moves > .row {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
+.sidebar-heading {
+    font-weight: 500;
+}
+
+.hr {
+    width: 100%;
+}
+
+@media only screen and (max-width: 900px) {
+
+    .controls-half-width {
+        width: auto;
+        flex-grow: 1;
+    }
+
+    .sidebar {
+        width: auto;
+    }
+}
+
+@media only screen and (max-height: 400px) {
+    .sidebar > * {
+        margin-bottom: 0;
+    }   
+
+    .hr {
+        margin: 7px 0px;
+    }
+}

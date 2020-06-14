@@ -1,0 +1,16 @@
+.myChessboard {
+	display: inline-block;
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
+.pieces > * {
+	margin: 0px 10px;
+}
+
+.pieces > *:hover {
+	cursor: pointer;
+	transform: scale(1.2);
+	transition: 0.1s;
+}

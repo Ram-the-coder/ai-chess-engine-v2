@@ -2,6 +2,7 @@ import React, {useState, useEffect, useRef} from 'react';
 import Chessboard from 'chessboardjsx';
 import chessPieces from './chessPieces';
 import {isPromotion} from '../../chessEngine/util';
+import './ChessBoard.css';
 
 function ChessBoard(props) {
 	const [fen, setFen] = useState('start');
@@ -70,7 +71,7 @@ function ChessBoard(props) {
 		}
 		let move = props.game.move(move_cfg);
 		if(move === null) return;
-		props.updateHistory([...props.history, props.game.history()[props.game.history()-1]]);
+		props.updateHistory([...props.history, props.game.history()[props.game.history().length-1]]);
 		setselectedSquare('');
 		setSquareStyles(squareStyling({selectedSquare: '', history: props.history}));
 		setFen(props.game.fen());
@@ -101,10 +102,14 @@ function ChessBoard(props) {
 				onDrop = {onDrop}
 				squareStyles = {squareStyles}
 				allowDrag = {allowDrag}
+				calcWidth = {({screenWidth, screenHeight}) => {
+					const availableDisplaySize = Math.min(screenWidth, screenHeight);
+					return availableDisplaySize >= 600 ?  560 : availableDisplaySize - 40;
+				}}
 			/>
 			{
 				isModalOpen &&
-				<div id="myModal" className="pop-outer col-lg-5">
+				<div id="myModal" className="pop-outer">
 					<div className="pop-inner">
 						<div className="modal-title">Promote to</div>
 						<div className="pieces">

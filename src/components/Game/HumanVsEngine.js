@@ -23,9 +23,15 @@ function HumanVsEngine() {
     const [searchDepth, setSearchDepth] = useState(3); // Search engine-related state
     const [maxDepth, setMaxDepth] = useState(5); // Search engine-related state
     const [evalCap, setEvalCap] = useState(20000); // Search engine-related state
-    const [playerColor, setPlayerColor] = useState('w'); // Used to check whose turn it is (AI's or human's) and to set board orientation
+	const [playerColor, _setPlayerColor] = useState('w'); // Used to check whose turn it is (AI's or human's) and to set board orientation
 	const [openSettings, setOpenSettings] = useState(false); // State of AI settings modal
 	const [hint, setHint] = useState({});
+
+	const playerColorRef = useRef('w');
+	const setPlayerColor = (newColor) => {
+		playerColorRef.current = newColor;
+		_setPlayerColor(newColor);
+	}
 
     useEffect(() => {
 		// Instantiate the thread in which the chess engine will run
@@ -42,7 +48,7 @@ function HumanVsEngine() {
     useEffect(() => {
 		// Let AI make the move if it is its turn
         if(game.current.turn() !== playerColor) letAiMakeMove();
-    });
+    }, [playerColor, history]);
 
     function letAiMakeMove() {
         const searchData = {
@@ -54,13 +60,15 @@ function HumanVsEngine() {
     }
 
     function undoGame() {
-        if(game.current.turn() !== playerColor) return; // Disable undo while AI is thinking
-        game.current.undo();
+		if(game.current.turn() !== playerColor) return; // Disable undo while AI is thinking
+		game.current.undo();
+		chessEngineWorker.current.postMessage({type: 'undo'});
         setHistory(history => {
             let newHistory = [...history];
             newHistory.pop();
             if(game.current.turn() !== playerColor) { // Undo the previous move of AI too
-                game.current.undo();
+				game.current.undo();
+				chessEngineWorker.current.postMessage({type: 'undo'});
                 newHistory.pop();
             }
             return newHistory;
@@ -89,14 +97,13 @@ function HumanVsEngine() {
     function handleWorkerMessage(e) {
         switch(e.data.type) {
             case 'search':
-				if(game.current.turn() !== playerColor) {
+				if(game.current.turn() !== playerColorRef) {
 					// AI's move
 					game.current.move(e.data.data.move);
 					chessEngineWorker.current.postMessage({type: 'move', data: e.data.data.move});
                 	setHistory(history => [...history, e.data.data.move]);
 				} else {
 					// Hint from AI
-					console.log(e.data);
 					const fromSquare = findFromSquare(game.current.board(), e.data.data.move, game.current.turn());
 					const toSquare = findToSquare(e.data.data.move);
 					const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);

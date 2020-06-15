@@ -16,37 +16,21 @@
 }
 
 @keyframes from-square {
-	0% {
-		background-color: transparent;
-	}
+	0% { background-color: transparent;}
 
-	25% {
-		background-color: rgba(255, 0, 0, 0.6);
-	}
+	25% { background-color: rgba(255, 0, 0, 0.6);}
 
-	50% {
-		background-color: transparent;
-	}
+	50% { background-color: transparent;}
 
-	75% {
-		background-color: rgba(255, 0, 0, 0.6);
-	}
+	75% { background-color: rgba(255, 0, 0, 0.6);} 
 }
 
 @keyframes to-square {
-	0% {
-		background-color: transparent;
-	}
+	0% { background-color: transparent;}
 
-	25% {
-		background-color: rgba(255, 0, 0, 0.6);
-	}
+	25% { background-color: rgba(255, 0, 0, 0.6);}
 
-	50% {
-		background-color: transparent;
-	}
+	50% { background-color: transparent;}
 
-	75% {
-		background-color: rgba(255, 0, 0, 0.6);
-	}
+	75% { background-color: rgba(255, 0, 0, 0.6);}
 }

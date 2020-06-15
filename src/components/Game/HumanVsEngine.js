@@ -162,6 +162,10 @@ function HumanVsEngine() {
                     <span className="sidebar-heading">{'Points balance: '}</span>{calculatePointsByPiece(game.current.board())}
                     <hr className='hr' />
                 </div>
+				<div className="status-bar text-center">
+					<span className="sidebar-heading">{game.current.turn() === playerColor ? 'Your Turn' : 'AI is Thinking...'}</span>
+					<hr className='hr' />
+				</div>
                 <MoveHistory history={history} />
             </div>
         </div>

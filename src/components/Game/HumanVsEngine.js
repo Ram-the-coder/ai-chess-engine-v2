@@ -11,27 +11,36 @@ import './HumanVsEngine.css';
 
 function HumanVsEngine() {
 
-    const game = useRef(new Chess());
-    const chessEngineWorker = useRef();
+	// game - used to store game state, generate moves, etc.
+	// Can't be set as state as it has many hidden attributes that change when using its methods.
+	// So we can't make ues of setState on game
+	const game = useRef(new Chess());
+	const chessEngineWorker = useRef(); // The worker thread
+	// The worker thread is initialized in the useEffect function as for some reason using useRef to initialize causes it 
+	// to initialize more than once - in result creating more than one worker thread
 
-    const [history, setHistory] = useState([]);
-    const [searchDepth, setSearchDepth] = useState(3);
-    const [maxDepth, setMaxDepth] = useState(5);
-    const [evalCap, setEvalCap] = useState(20000);
-    const [isAIthinking, setisAIthinking] = useState(false);
-    const [playerColor, setPlayerColor] = useState('w');
-    const [openSettings, setOpenSettings] = useState(false);
+    const [history, setHistory] = useState([]); // Used as state -> condition on which to re-render
+    const [searchDepth, setSearchDepth] = useState(3); // Search engine-related state
+    const [maxDepth, setMaxDepth] = useState(5); // Search engine-related state
+    const [evalCap, setEvalCap] = useState(20000); // Search engine-related state
+    const [playerColor, setPlayerColor] = useState('w'); // Used to check whose turn it is (AI's or human's) and to set board orientation
+    const [openSettings, setOpenSettings] = useState(false); // State of AI settings modal
 
     useEffect(() => {
+		// Instantiate the thread in which the chess engine will run
         chessEngineWorker.current = new ChessEngineWorker();
         chessEngineWorker.current.onmessage = handleWorkerMessage;
         chessEngineWorker.current.postMessage({type:'init'});
 
-        return () => chessEngineWorker.current.terminate();
+        return function cleanup() {
+			// Delete the thread in which the chess engine ran
+			chessEngineWorker.current.terminate();
+		}
     }, []);
 
     useEffect(() => {
-        if(game.current.turn() !== playerColor) letAiMakeMove(); // AI's turn
+		// Let AI make the move if it is its turn
+        if(game.current.turn() !== playerColor) letAiMakeMove();
     });
 
     function letAiMakeMove() {
@@ -58,7 +67,8 @@ function HumanVsEngine() {
     }
 
     function newGame() {
-        game.current = new Chess();
+		game.current = new Chess();
+		chessEngineWorker.current.postMessage({type: 'reset'});
         setHistory([]);
     }
 
@@ -75,14 +85,17 @@ function HumanVsEngine() {
             case 'search':
                 game.current.move(e.data.data.move);
                 setHistory(history => [...history, e.data.data.move]);
-                break;
-            default: break;
+				break;
+				
+			default: 
+				console.log("Unhandled message from worker", e.data);
+				break;
         }
     }
 
-    function updateGameState(newHistory) {
-        setHistory(newHistory);
-        chessEngineWorker.current.postMessage({type: 'move', data: newHistory[newHistory.length - 1]});
+    function updateGameState(move) {
+        setHistory(history => [...history, move]);
+        chessEngineWorker.current.postMessage({type: 'move', data: move});
     }
 
 	return (
@@ -102,8 +115,7 @@ function HumanVsEngine() {
             <div className="chessboard-wrapper">
                 <ChessBoard 
                     game = {game.current}
-                    history = {history}
-                    updateHistory = {updateGameState}
+                    onMove = {updateGameState}
                     orientation = {playerColor === 'w' ? 'white' : 'black'}
                 />
             </div>

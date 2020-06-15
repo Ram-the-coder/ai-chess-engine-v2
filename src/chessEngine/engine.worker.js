@@ -8,7 +8,7 @@ self.addEventListener('message', e => {
     switch(e.data.type) {
 
         case 'init': 
-            initGame(e.startPosition); 
+            initGame(e.data.startPosition); 
             break;
 
         case 'move':
@@ -27,6 +27,14 @@ self.addEventListener('message', e => {
             game.undo();
             console.log(game.ascii());
             break;        
+
+        case 'reset':
+            resetGame(e.data.startPosition);
+            break;
+        
+        default: 
+            console.log("Invalid message type");
+            break;
     }
 })
 
@@ -35,4 +43,8 @@ function initGame(startPosition) {
     game = startPosition ? new Chess(startPosition) : new Chess();
     engine = new ChessEngine();
     console.log(game.ascii());
+}
+
+function resetGame(startPosition) {
+    game = startPosition ? new Chess(startPosition) : new Chess();
 }

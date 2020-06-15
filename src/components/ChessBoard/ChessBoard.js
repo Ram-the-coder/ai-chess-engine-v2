@@ -4,20 +4,20 @@ import chessPieces from './chessPieces';
 import {isPromotion} from '../../chessEngine/util';
 import './ChessBoard.css';
 
-function ChessBoard({game, history, updateHistory, orientation}) {
-	const [fen, setFen] = useState('start');
-	const [squareStyles, setSquareStyles] = useState({});
-	const [selectedSquare, setselectedSquare] = useState('');
-	const [isModalOpen, setModalState] = useState(false);
+function ChessBoard({game, orientation, onMove}) {
+	const [fen, setFen] = useState('start'); // Used to set/update the board position
+	const [squareStyles, setSquareStyles] = useState({}); // Defines special styles to apply to squares
+	const [selectedSquare, setselectedSquare] = useState(''); // Contains the square selected
+	const [isModalOpen, setModalState] = useState(false); // Piece Promotion Modal
 	const promo_move_cfg = useRef({});
 
 	useEffect(() => {
 		setFen(game.fen());
-	}, [history]);
+	}, [game.history()]);
 
 	function onMouseOutSquare(square) {
 		// Remove highlighting of possible moves
-		setSquareStyles(noHighlightSquareStyles(square, history, selectedSquare));
+		setSquareStyles(noHighlightSquareStyles(square, game.history(), selectedSquare));
 	}
 	
 	function onMouseOverSquare(square) {
@@ -30,17 +30,20 @@ function ChessBoard({game, history, updateHistory, orientation}) {
 		if(moves.length === 0) return;
 
 		const squaresToHighlight = moves.map(move => move.to);
-		setSquareStyles(highlightSquareStyles(square, squaresToHighlight, history, selectedSquare));
+		setSquareStyles(highlightSquareStyles(square, squaresToHighlight, game.history(), selectedSquare));
 	}
 	
 	function onSquareClick(square) {
-		// select square and remove highlighting of possible moves
 		if(square == selectedSquare) {
+			// If this square has been previously selected than unselect it
 			setselectedSquare('');
-			setSquareStyles(squareStyling({selectedSquare: '', history}));
+			setSquareStyles(squareStyling({selectedSquare: '', history: game.history()}));
 			return;
 		}
 
+		// If a move is possible between previously selected square and the currently selected square
+		// then make that move, else just update the selected square to the currently selected one
+		// and remove highlighting of possible moves
 		let move = game.moves({
 			from: selectedSquare,
 			to: square,
@@ -48,7 +51,7 @@ function ChessBoard({game, history, updateHistory, orientation}) {
 		});
 
 		setselectedSquare(square);
-		setSquareStyles(squareStyling({selectedSquare: square, history}));
+		setSquareStyles(squareStyling({selectedSquare: square, history: game.history()}));
 
 		if(move === null || !selectedSquare) return;		
 		makeMove({
@@ -75,9 +78,9 @@ function ChessBoard({game, history, updateHistory, orientation}) {
 		}
 		let move = game.move(move_cfg);
 		if(move === null) return;
-		updateHistory([...history, game.history()[game.history().length-1]]);
 		setselectedSquare('');
-		setSquareStyles(squareStyling({selectedSquare: '', history}));
+		onMove(game.history()[game.history().length - 1]);
+		setSquareStyles(squareStyling({selectedSquare: '', history: game.history()}));
 		setFen(game.fen());
 	}
 
@@ -85,9 +88,9 @@ function ChessBoard({game, history, updateHistory, orientation}) {
 		promo_move_cfg.current.promotion = piece;
 		let move = game.move(promo_move_cfg.current);
 		if(move === null) return;
-		updateHistory([...history, game.history()[game.history()-1]]);
 		setselectedSquare('');
-		setSquareStyles(squareStyling({selectedSquare: '', history}));
+		onMove(game.history()[game.history().length - 1]);
+		setSquareStyles(squareStyling({selectedSquare: '', history: game.history()}));
 		setFen(game.fen());
 		setModalState(false);
 	}

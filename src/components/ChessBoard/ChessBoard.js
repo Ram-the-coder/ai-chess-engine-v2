@@ -4,16 +4,38 @@ import chessPieces from './chessPieces';
 import {isPromotion} from '../../chessEngine/util';
 import './ChessBoard.css';
 
-function ChessBoard({game, orientation, onMove}) {
+function ChessBoard({game, orientation, onMove, hint, onHintShown}) {
 	const [fen, setFen] = useState('start'); // Used to set/update the board position
 	const [squareStyles, setSquareStyles] = useState({}); // Defines special styles to apply to squares
 	const [selectedSquare, setselectedSquare] = useState(''); // Contains the square selected
 	const [isModalOpen, setModalState] = useState(false); // Piece Promotion Modal
 	const promo_move_cfg = useRef({});
 
+	// Update the board on change of game history
 	useEffect(() => {
 		setFen(game.fen());
 	}, [game.history()]);
+
+	// Check for hints
+	useEffect(() => {
+		if(JSON.stringify(hint) === "{}") return;
+		let newSquareStyles = squareStyling({history: game.history(), selectedSquare});
+		newSquareStyles[hint.from] = {
+			animation: "from-square 1.5s ease-in-out"
+		}
+
+		newSquareStyles[hint.to] = {
+			animation: "to-square 1.5s ease-in-out",
+			animationDelay: "1.5s"
+		}
+
+		setSquareStyles(newSquareStyles);
+
+		setTimeout(() => {
+			setSquareStyles(squareStyling({history: game.history(), selectedSquare}));
+			onHintShown();
+		}, 3000);
+	}, [hint])
 
 	function onMouseOutSquare(square) {
 		// Remove highlighting of possible moves

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import ChessBoard from '../ChessBoard/ChessBoard';
 import Chess from 'chess.js';
-import {calculatePointsByPiece} from '../../chessEngine/util';
+import {calculatePointsByPiece, findFromSquare, findToSquare} from '../../chessEngine/util';
 import MoveHistory from './MoveHistory';
 import Modal from './Modal';
 import ChessEngineWorker from '../../chessEngine/engine.worker';
@@ -24,7 +24,8 @@ function HumanVsEngine() {
     const [maxDepth, setMaxDepth] = useState(5); // Search engine-related state
     const [evalCap, setEvalCap] = useState(20000); // Search engine-related state
     const [playerColor, setPlayerColor] = useState('w'); // Used to check whose turn it is (AI's or human's) and to set board orientation
-    const [openSettings, setOpenSettings] = useState(false); // State of AI settings modal
+	const [openSettings, setOpenSettings] = useState(false); // State of AI settings modal
+	const [hint, setHint] = useState({});
 
     useEffect(() => {
 		// Instantiate the thread in which the chess engine will run
@@ -73,7 +74,12 @@ function HumanVsEngine() {
     }
 
     function showHint() {
-
+		const searchData = {
+            searchDepth,
+            evalCap,
+            maxPly: maxDepth
+        }
+		chessEngineWorker.current.postMessage({type: 'search', data: searchData});
     }
 
     function switchSides() {
@@ -83,8 +89,21 @@ function HumanVsEngine() {
     function handleWorkerMessage(e) {
         switch(e.data.type) {
             case 'search':
-                game.current.move(e.data.data.move);
-                setHistory(history => [...history, e.data.data.move]);
+				if(game.current.turn() !== playerColor) {
+					// AI's move
+					game.current.move(e.data.data.move);
+					chessEngineWorker.current.postMessage({type: 'move', data: e.data.data.move});
+                	setHistory(history => [...history, e.data.data.move]);
+				} else {
+					// Hint from AI
+					console.log(e.data);
+					const fromSquare = findFromSquare(game.current.board(), e.data.data.move, game.current.turn());
+					const toSquare = findToSquare(e.data.data.move);
+					const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
+					const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
+					setHint({from, to});
+				}
+                
 				break;
 				
 			default: 
@@ -116,7 +135,9 @@ function HumanVsEngine() {
                 <ChessBoard 
                     game = {game.current}
                     onMove = {updateGameState}
-                    orientation = {playerColor === 'w' ? 'white' : 'black'}
+					orientation = {playerColor === 'w' ? 'white' : 'black'}
+					hint = {hint}
+					onHintShown = {() => setHint({})}
                 />
             </div>
             <div className="sidebar">

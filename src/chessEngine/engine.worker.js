@@ -18,9 +18,7 @@ self.addEventListener('message', e => {
 
         case 'search':
             let bestMove = engine.getBestMove(game, e.data.data.searchDepth, e.data.data.evalCap, e.data.data.maxPly);
-            if(!bestMove.nomoves) game.move(bestMove.move);
             self.postMessage({type: 'search', data: bestMove});
-            console.log(game.ascii());
             break;
 
         case 'undo':

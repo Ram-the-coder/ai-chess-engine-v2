@@ -154,6 +154,7 @@ function ChessBoard({game, orientation, onMove, hint, onHintShown, dimensionAdju
 				squareStyles = {squareStyles}
 				allowDrag = {allowDrag}
 				calcWidth = {calcWidth}
+				transitionDuration = {200}
 			/>
 			{
 				isModalOpen &&

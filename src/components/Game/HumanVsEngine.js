@@ -6,6 +6,10 @@ import MoveHistory from './MoveHistory';
 import Modal from './Modal';
 import PlayerInfo from './PlayerInfo';
 import ChessEngineWorker from '../../chessEngine/engine.worker';
+import MoveSound from '../../assets/Move.mp3';
+import NewGameSound from '../../assets/NewGame.mp3';
+import UndoSound from '../../assets/Undo.mp3';
+import SwitchSound from '../../assets/Switch.mp3';
 
 import './HumanVsEngine.css';
 
@@ -26,7 +30,11 @@ function HumanVsEngine() {
     const [evalCap, setEvalCap] = useState(20000); // Search engine-related state
 	const [playerColor, _setPlayerColor] = useState('w'); // Used to check whose turn it is (AI's or human's) and to set board orientation
 	const [openSettings, setOpenSettings] = useState(false); // State of AI settings modal
-	const [hint, setHint] = useState({});
+    const [hint, setHint] = useState({});
+    const moveAudio = useRef(null);
+    const newGameAudio = useRef(null);
+    const undoAudio = useRef(null);
+    const switchAudio = useRef(null);
 
 	const playerColorRef = useRef('w');
 	const setPlayerColor = (newColor) => {
@@ -49,16 +57,17 @@ function HumanVsEngine() {
     useEffect(() => {
 		// Let AI make the move if it is its turn
         if(game.current.turn() !== playerColor) letAiMakeMove();
-    }, [playerColor, history]);
 
-    function letAiMakeMove() {
-        const searchData = {
-            searchDepth,
-            evalCap,
-            maxPly: maxDepth
+        function letAiMakeMove() {
+            const searchData = {
+                searchDepth,
+                evalCap,
+                maxPly: maxDepth
+            }
+            setTimeout(() => chessEngineWorker.current.postMessage({type: 'search', data: searchData}), 250);
         }
-        setTimeout(() => chessEngineWorker.current.postMessage({type: 'search', data: searchData}), 250);
-    }
+
+    }, [playerColor, history]);    
 
     function undoGame() {
 		if(game.current.turn() !== playerColor) return; // Disable undo while AI is thinking
@@ -74,12 +83,14 @@ function HumanVsEngine() {
             }
             return newHistory;
         });
+        undoAudio.current.play();
     }
 
     function newGame() {
 		game.current = new Chess();
 		chessEngineWorker.current.postMessage({type: 'reset'});
         setHistory([]);
+        newGameAudio.current.play();
     }
 
     function showHint() {
@@ -93,6 +104,7 @@ function HumanVsEngine() {
 
     function switchSides() {
         setPlayerColor(playerColor === 'w' ? 'b' : 'w');
+        switchAudio.current.play();
     }
 
     function handleWorkerMessage(e) {
@@ -101,7 +113,8 @@ function HumanVsEngine() {
             case 'search':
 				if(game.current.turn() !== playerColorRef.current) {
 					// AI's move
-					game.current.move(e.data.data.move);
+                    game.current.move(e.data.data.move);
+                    moveAudio.current.play();
 					chessEngineWorker.current.postMessage({type: 'move', data: e.data.data.move});
                 	setHistory(history => [...history, e.data.data.move]);
 				} else {
@@ -122,6 +135,7 @@ function HumanVsEngine() {
     }
 
     function updateGameState(move) {
+        moveAudio.current.play();
         setHistory(history => [...history, move]);
         chessEngineWorker.current.postMessage({type: 'move', data: move});
     }
@@ -181,6 +195,10 @@ function HumanVsEngine() {
                 </div>
                 <MoveHistory history={history} />
             </div>
+            <audio ref={newGameAudio} src={NewGameSound} />
+            <audio ref={moveAudio} src={MoveSound} />
+            <audio ref={undoAudio} src={UndoSound} />
+            <audio ref={switchAudio} src={SwitchSound} />
         </div>
     );
 }

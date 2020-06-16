@@ -3,7 +3,8 @@ import ChessBoard from '../ChessBoard/ChessBoard';
 import Chess from 'chess.js';
 import {calculatePointsByPiece, findFromSquare, findToSquare} from '../../chessEngine/util';
 import MoveHistory from './MoveHistory';
-import Modal from './Modal';
+import SettingsModal from './SettingsModal';
+import GameoverModal from './GameoverModal';
 import PlayerInfo from './PlayerInfo';
 import ChessEngineWorker from '../../chessEngine/engine.worker';
 import MoveSound from '../../assets/Move.mp3';
@@ -31,6 +32,9 @@ function HumanVsEngine() {
 	const [playerColor, _setPlayerColor] = useState('w'); // Used to check whose turn it is (AI's or human's) and to set board orientation
 	const [openSettings, setOpenSettings] = useState(false); // State of AI settings modal
     const [hint, setHint] = useState({});
+    const [openGameoverModal, setOpenGameoverModal ] = useState(true);
+    const [gameoverStatus, setGameoverStatus] = useState(4);
+
     const moveAudio = useRef(null);
     const newGameAudio = useRef(null);
     const undoAudio = useRef(null);
@@ -55,6 +59,13 @@ function HumanVsEngine() {
     }, []);
 
     useEffect(() => {
+        let gameOver, status;
+        ({gameOver, status} = checkGameEnd(game.current));
+        if(gameOver) {
+            setGameoverStatus(status);
+            setOpenGameoverModal(true);
+            return;
+        }
 		// Let AI make the move if it is its turn
         if(game.current.turn() !== playerColor) letAiMakeMove();
 
@@ -71,8 +82,9 @@ function HumanVsEngine() {
 
     function undoGame() {
 		if(game.current.turn() !== playerColor) return; // Disable undo while AI is thinking
-		game.current.undo();
-		chessEngineWorker.current.postMessage({type: 'undo'});
+        game.current.undo();
+        chessEngineWorker.current.postMessage({type: 'undo'});
+        setGameoverStatus(0);
         setHistory(history => {
             let newHistory = [...history];
             newHistory.pop();
@@ -90,6 +102,7 @@ function HumanVsEngine() {
 		game.current = new Chess();
 		chessEngineWorker.current.postMessage({type: 'reset'});
         setHistory([]);
+        setGameoverStatus(0);
         newGameAudio.current.play();
     }
 
@@ -144,7 +157,7 @@ function HumanVsEngine() {
         <div className="game">
             {
                 openSettings && 
-                <Modal 
+                <SettingsModal 
                     searchDepth = {searchDepth}
                     setSearchDepth = {setSearchDepth}
                     maxDepth = {maxDepth}
@@ -152,6 +165,15 @@ function HumanVsEngine() {
                     evalCap = {evalCap}
                     setEvalCap = {setEvalCap}
                     setOpenSettings = {setOpenSettings}
+                />
+            }
+            {
+                openGameoverModal &&
+                <GameoverModal 
+                    playerColor = {playerColor}
+                    statusCode = {gameoverStatus}
+                    startNewGame = {newGame}
+                    closeModal = {() => setOpenGameoverModal(false)}
                 />
             }
             <div className="bounding-box">
@@ -201,6 +223,34 @@ function HumanVsEngine() {
             <audio ref={switchAudio} src={SwitchSound} />
         </div>
     );
+}
+
+const gameEndStatusCode = {
+	CHECKMATE_BY_WHITE: 1,
+	CHECKMATE_BY_BLACK: 2,
+	STALEMATE: 3,
+	THREEFOLD_REP: 4,
+	INSUFFICIENT_MAT: 5,
+	FIFTY_MOVE: 6
+};
+
+function checkGameEnd(game) {
+	let gameOver = true;
+	let status;
+	if(game.in_checkmate()) {
+		status = game.turn() === 'b' ? gameEndStatusCode.CHECKMATE_BY_WHITE : gameEndStatusCode.CHECKMATE_BY_BLACK;
+	} else if(game.in_stalemate()) { 
+		status = gameEndStatusCode.STALEMATE;
+	} else if(game.in_threefold_repetition()) {
+		status = gameEndStatusCode.THREEFOLD_REP;
+	} else if(game.insufficient_material()) {
+		status = gameEndStatusCode.INSUFFICIENT_MAT;
+	} else if(game.in_draw()) {
+		status = gameEndStatusCode.FIFTY_MOVE;
+	} else {
+		gameOver = false;
+	}
+	return {gameOver, status};
 }
 
 export default HumanVsEngine;

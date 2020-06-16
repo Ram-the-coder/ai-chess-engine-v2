@@ -96,9 +96,10 @@ function HumanVsEngine() {
     }
 
     function handleWorkerMessage(e) {
+        // debugger;
         switch(e.data.type) {
             case 'search':
-				if(game.current.turn() !== playerColorRef) {
+				if(game.current.turn() !== playerColorRef.current) {
 					// AI's move
 					game.current.move(e.data.data.move);
 					chessEngineWorker.current.postMessage({type: 'move', data: e.data.data.move});

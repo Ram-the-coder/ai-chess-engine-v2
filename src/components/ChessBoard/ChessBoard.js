@@ -139,8 +139,6 @@ function ChessBoard({game, orientation, onMove, hint, onHintShown, dimensionAdju
 		const availWidth = screenWidth - xadjust;
 		const availHeight = screenHeight - yadjust;
 
-		console.log({availHeight, availWidth});
-
 		return Math.min(560, Math.min(availHeight, availWidth));
 	}
 

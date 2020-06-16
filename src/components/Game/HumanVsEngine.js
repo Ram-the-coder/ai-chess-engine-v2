@@ -32,8 +32,8 @@ function HumanVsEngine() {
 	const [playerColor, _setPlayerColor] = useState('w'); // Used to check whose turn it is (AI's or human's) and to set board orientation
 	const [openSettings, setOpenSettings] = useState(false); // State of AI settings modal
     const [hint, setHint] = useState({});
-    const [openGameoverModal, setOpenGameoverModal ] = useState(true);
-    const [gameoverStatus, setGameoverStatus] = useState(4);
+    const [openGameoverModal, setOpenGameoverModal ] = useState(false);
+    const [gameoverStatus, setGameoverStatus] = useState(0);
 
     const moveAudio = useRef(null);
     const newGameAudio = useRef(null);
@@ -103,6 +103,7 @@ function HumanVsEngine() {
 		chessEngineWorker.current.postMessage({type: 'reset'});
         setHistory([]);
         setGameoverStatus(0);
+        setOpenGameoverModal(false);
         newGameAudio.current.play();
     }
 
@@ -177,7 +178,7 @@ function HumanVsEngine() {
                 />
             }
             <div className="bounding-box">
-                <PlayerInfo name="AI" isThinking={game.current.turn() !== playerColor} thinkingText="AI is Thinking..." />
+                <PlayerInfo name="AI" isThinking={(gameoverStatus === 0) && (game.current.turn() !== playerColor)} thinkingText="AI is Thinking..." />
                 <div className="chessboard-wrapper">
                     <ChessBoard 
                         game = {game.current}
@@ -191,22 +192,22 @@ function HumanVsEngine() {
                         }}
                     />
                 </div>
-                <PlayerInfo name="You" isThinking={game.current.turn() === playerColor} thinkingText="Your Turn" />
+                <PlayerInfo name="You" isThinking={(gameoverStatus === 0) && (game.current.turn() === playerColor)} thinkingText="Your Turn" />
             </div>
             <div className="sidebar">
                 <div className="controls">
                     <button className="btn btn-dark controls-half-width" 
                             onClick={() => undoGame()} 
-                            disabled={game.current.turn() !== playerColor}>Undo</button>
+                            disabled={(gameoverStatus !== 0) || (game.current.turn() !== playerColor)}>Undo</button>
                     <button className="btn btn-dark controls-half-width"
                             onClick={() => newGame()} 
-                            disabled={game.current.turn() !== playerColor}>New Game</button>
+                            disabled={(gameoverStatus === 0) && (game.current.turn() !== playerColor)}>New Game</button>
                     <button className="btn btn-dark controls-half-width"
                             onClick={() => showHint()} 
-                            disabled={game.current.turn() !== playerColor}>Hint</button>
+                            disabled={(gameoverStatus !== 0) || (game.current.turn() !== playerColor)}>Hint</button>
                     <button className="btn btn-dark controls-half-width"
                             onClick={() => switchSides()} 
-                            disabled={game.current.turn() !== playerColor}>Switch Sides</button>
+                            disabled={(gameoverStatus !== 0) || (game.current.turn() !== playerColor)}>Switch Sides</button>
                     <button className="btn btn-dark btn-block" 
                             onClick={() => setOpenSettings(true)}>AI Settings</button>
                     <hr className='hr' />

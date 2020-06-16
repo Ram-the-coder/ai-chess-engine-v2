@@ -1,0 +1,12 @@
+.player-info {
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+@media only screen and (max-width: 450px), (max-height: 450px) {
+    .player-info {
+        padding: 0px;
+    }
+}

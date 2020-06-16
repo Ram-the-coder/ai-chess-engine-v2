@@ -4,7 +4,7 @@ import chessPieces from './chessPieces';
 import {isPromotion} from '../../chessEngine/util';
 import './ChessBoard.css';
 
-function ChessBoard({game, orientation, onMove, hint, onHintShown}) {
+function ChessBoard({game, orientation, onMove, hint, onHintShown, dimensionAdjustment}) {
 	const [fen, setFen] = useState('start'); // Used to set/update the board position
 	const [squareStyles, setSquareStyles] = useState({}); // Defines special styles to apply to squares
 	const [selectedSquare, setselectedSquare] = useState(''); // Contains the square selected
@@ -121,6 +121,29 @@ function ChessBoard({game, orientation, onMove, hint, onHintShown}) {
 		return piece[0] == game.turn();
 	}
 
+	function calcWidth({screenHeight, screenWidth}) {
+		if(!screenHeight || !screenWidth) return 560;
+		let xadjust = 0, yadjust = 0;
+		if(dimensionAdjustment.width.percent)
+			xadjust += (screenWidth * dimensionAdjustment.width.percent) / 100;
+
+		if(dimensionAdjustment.width.pixel)
+			xadjust += dimensionAdjustment.width.pixel;
+
+		if(dimensionAdjustment.height.percent)
+			yadjust += (screenHeight * dimensionAdjustment.height.percent) / 100;
+
+		if(dimensionAdjustment.height.pixel)
+			yadjust += dimensionAdjustment.height.pixel;
+
+		const availWidth = screenWidth - xadjust;
+		const availHeight = screenHeight - yadjust;
+
+		console.log({availHeight, availWidth});
+
+		return Math.min(560, Math.min(availHeight, availWidth));
+	}
+
 	return (
 		<div className="myChessboard">
 			<Chessboard 
@@ -132,10 +155,7 @@ function ChessBoard({game, orientation, onMove, hint, onHintShown}) {
 				onDrop = {onDrop}
 				squareStyles = {squareStyles}
 				allowDrag = {allowDrag}
-				calcWidth = {({screenWidth, screenHeight}) => {
-					const availableDisplaySize = Math.min(screenWidth, screenHeight);
-					return availableDisplaySize >= 600 ?  560 : availableDisplaySize - 40;
-				}}
+				calcWidth = {calcWidth}
 			/>
 			{
 				isModalOpen &&

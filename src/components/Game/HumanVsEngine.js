@@ -4,6 +4,7 @@ import Chess from 'chess.js';
 import {calculatePointsByPiece, findFromSquare, findToSquare} from '../../chessEngine/util';
 import MoveHistory from './MoveHistory';
 import Modal from './Modal';
+import PlayerInfo from './PlayerInfo';
 import ChessEngineWorker from '../../chessEngine/engine.worker';
 
 import './HumanVsEngine.css';
@@ -138,14 +139,22 @@ function HumanVsEngine() {
                     setOpenSettings = {setOpenSettings}
                 />
             }
-            <div className="chessboard-wrapper">
-                <ChessBoard 
-                    game = {game.current}
-                    onMove = {updateGameState}
-					orientation = {playerColor === 'w' ? 'white' : 'black'}
-					hint = {hint}
-					onHintShown = {() => setHint({})}
-                />
+            <div className="bounding-box">
+                <PlayerInfo name="AI" isThinking={game.current.turn() !== playerColor} thinkingText="AI is Thinking..." />
+                <div className="chessboard-wrapper">
+                    <ChessBoard 
+                        game = {game.current}
+                        onMove = {updateGameState}
+                        orientation = {playerColor === 'w' ? 'white' : 'black'}
+                        hint = {hint}
+                        onHintShown = {() => setHint({})}
+                        dimensionAdjustment = {{
+                            width: {percent: 4},
+                            height: {pixel: 84}
+                        }}
+                    />
+                </div>
+                <PlayerInfo name="You" isThinking={game.current.turn() === playerColor} thinkingText="Your Turn" />
             </div>
             <div className="sidebar">
                 <div className="controls">
@@ -165,14 +174,10 @@ function HumanVsEngine() {
                             onClick={() => setOpenSettings(true)}>AI Settings</button>
                     <hr className='hr' />
                 </div>
-                <div className="text-center">
+				<div className="text-center">
                     <span className="sidebar-heading">{'Points balance: '}</span>{calculatePointsByPiece(game.current.board())}
                     <hr className='hr' />
                 </div>
-				<div className="status-bar text-center">
-					<span className="sidebar-heading">{game.current.turn() === playerColor ? 'Your Turn' : 'AI is Thinking...'}</span>
-					<hr className='hr' />
-				</div>
                 <MoveHistory history={history} />
             </div>
         </div>

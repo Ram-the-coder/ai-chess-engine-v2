@@ -21,18 +21,6 @@
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
-.settings-wrapper {
-    padding: 5vh 5vw;
-    display: flex;
-    flex-direction: column;
-    text-align: center;
-    justify-content: center;
-}
-
-.settings-wrapper > * {
-    margin: 1vh;
-}
-
 .settings-wrapper > div > label {
     text-align: left;
 }
@@ -136,4 +124,52 @@
         border-radius: .2rem;
         margin: 3px;
     }
+}
+
+.myTooltip {
+	position: relative;
+	display: inline-block;
+}
+  
+.myTooltip .tooltiptext {
+	visibility: hidden;
+	width: 140px;
+	background-color: #555;
+	color: #fff;
+	text-align: center;
+	border-radius: 6px;
+	padding: 5px;
+	position: absolute;
+	z-index: 11;
+	bottom: 150%;
+	left: 50%;
+	margin-left: -75px;
+	opacity: 0;
+	transition: opacity 0.3s;
+}
+  
+.myTooltip .tooltiptext::after {
+	content: "";
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	margin-left: -5px;
+	border-width: 5px;
+	border-style: solid;
+	border-color: #555 transparent transparent transparent;
+}
+  
+.myTooltip:hover .tooltiptext {
+	visibility: visible;
+	opacity: 1;
+}
+
+.myRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+}
+
+.myRow > button {
+	margin: 0 1vw;
 }

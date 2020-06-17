@@ -53,14 +53,12 @@ export default function GameoverModal({playerColor, statusCode, startNewGame, cl
     }
 
     return (
-        <Modal>
-            <div className="settings-wrapper">
-                <h2 style={{margin: "2vh"}}>{result}</h2>
-                <div style={{margin: "2vh"}}>{text}</div>
-                <div className="btn-row" style={{margin: "2vh"}}>
-                    <button className="btn btn-success" onClick={startNewGame}>New Game</button>
-                    <button className="btn btn-danger" onClick={closeModal}>Close</button>
-                </div>
+        <Modal className="settings-wrapper">
+            <h2 style={{margin: "2vh"}}>{result}</h2>
+            <div style={{margin: "2vh"}}>{text}</div>
+            <div className="btn-row" style={{margin: "2vh"}}>
+                <button className="btn btn-success" onClick={startNewGame}>New Game</button>
+                <button className="btn btn-danger" onClick={closeModal}>Close</button>
             </div>
         </Modal>
     );

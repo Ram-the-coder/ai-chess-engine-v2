@@ -3,8 +3,9 @@ import ChessBoard from '../ChessBoard/ChessBoard';
 import Chess from 'chess.js';
 import {calculatePointsByPiece, findFromSquare, findToSquare} from '../../chessEngine/util';
 import MoveHistory from './MoveHistory';
-import SettingsModal from './SettingsModal';
-import GameoverModal from './GameoverModal';
+import SettingsModal from './Modals/SettingsModal';
+import GameoverModal from './Modals/GameoverModal';
+import PgnModal from './Modals/PgnModal';
 import PlayerInfo from './PlayerInfo';
 import ChessEngineWorker from '../../chessEngine/engine.worker';
 import MoveSound from '../../assets/Move.mp3';
@@ -34,6 +35,7 @@ function HumanVsEngine() {
     const [hint, setHint] = useState({});
     const [openGameoverModal, setOpenGameoverModal ] = useState(false);
     const [gameoverStatus, setGameoverStatus] = useState(0);
+    const [getPgnModal, setGetPgnModal] = useState(false);
 
     const moveAudio = useRef(null);
     const newGameAudio = useRef(null);
@@ -121,6 +123,14 @@ function HumanVsEngine() {
         switchAudio.current.play();
     }
 
+    function getPGN() {
+        
+    }
+
+    function loadPGN() {
+        
+    }
+
     function handleWorkerMessage(e) {
         // debugger;
         switch(e.data.type) {
@@ -177,6 +187,13 @@ function HumanVsEngine() {
                     closeModal = {() => setOpenGameoverModal(false)}
                 />
             }
+            {
+                getPgnModal &&
+                <PgnModal 
+                    pgn = {game.current.pgn()} 
+                    closeModal = {() => setGetPgnModal(false)}
+                />
+            }
             <div className="bounding-box">
                 <PlayerInfo name="AI" isThinking={(gameoverStatus === 0) && (game.current.turn() !== playerColor)} thinkingText="AI is Thinking..." />
                 <div className="chessboard-wrapper">
@@ -218,6 +235,9 @@ function HumanVsEngine() {
                     <hr className='hr' />
                 </div>
                 <MoveHistory history={history} />
+                <div className="controls">
+                    <button className="btn btn-dark btn-block" onClick={() => setGetPgnModal(true)} disabled = {history.length === 0}>Get PGN</button>
+                </div>
             </div>
             <audio ref={newGameAudio} src={NewGameSound} />
             <audio ref={moveAudio} src={MoveSound} />

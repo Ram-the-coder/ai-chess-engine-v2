@@ -6,7 +6,7 @@ export default function PlayerInfo({name, thinkingText, isThinking}) {
     return (
         <div className="player-info">
             <div className="sidebar-heading">{name}</div>
-            {isThinking && <div className="sidebar-heading">{thinkingText}</div>}
+            {isThinking && <div className="sidebar-heading thinking-text blink">{thinkingText}</div>}
         </div>
     );
 }

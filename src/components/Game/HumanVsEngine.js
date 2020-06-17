@@ -28,8 +28,8 @@ function HumanVsEngine() {
 
     const [history, setHistory] = useState([]); // Used as state -> condition on which to re-render
     const [searchDepth, setSearchDepth] = useState(3); // Search engine-related state
-    const [maxDepth, setMaxDepth] = useState(5); // Search engine-related state
-    const [evalCap, setEvalCap] = useState(20000); // Search engine-related state
+    const [maxDepth, setMaxDepth] = useState(3); // Search engine-related state
+    const [evalCap, setEvalCap] = useState(15000); // Search engine-related state
 	const [playerColor, _setPlayerColor] = useState('w'); // Used to check whose turn it is (AI's or human's) and to set board orientation
 	const [openSettings, setOpenSettings] = useState(false); // State of AI settings modal
     const [hint, setHint] = useState({});
@@ -37,6 +37,7 @@ function HumanVsEngine() {
     const [openGameoverModal, setOpenGameoverModal ] = useState(false);
     const [gameoverStatus, setGameoverStatus] = useState(0);
     const [getPgnModal, setGetPgnModal] = useState(false);
+    const [needToPlayMoveSound, setNeedToPlayMoveSound] = useState(false);
 
     const moveAudio = useRef(null);
     const newGameAudio = useRef(null);
@@ -66,6 +67,13 @@ function HumanVsEngine() {
 			chessEngineWorker.current.terminate();
 		}
     }, []);
+
+    useEffect(() => {
+        if(needToPlayMoveSound) {
+            moveAudio.current.play(); 
+            setNeedToPlayMoveSound(false);
+        }
+    }, [needToPlayMoveSound])
 
     useEffect(() => {
         setWaitingForHint(false);
@@ -140,14 +148,20 @@ function HumanVsEngine() {
         // debugger;
         console.log(e.data);
         switch(e.data.type) {
-            case 'search':
+            case 'search':{
                 // AI's move
-                game.current.move(e.data.data.move);
-                moveAudio.current.play();
+                
                 chessEngineWorker.current.postMessage({type: 'move', data: e.data.data.move});
-                setHistory(history => [...history, e.data.data.move]);
-            
-            case 'hint':
+                const fromSquare = findFromSquare(game.current.board(), e.data.data.move, game.current.turn());
+                const toSquare = findToSquare(e.data.data.move);
+                const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
+                const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
+                game.current.move(e.data.data.move);
+                setHistory(history => [...history, {move: e.data.data.move, from, to}]);
+                setNeedToPlayMoveSound(true);
+                // moveAudio.current.play();
+            }
+            case 'hint':{
                 // Hint from AI
                 if(!waitingForHintRef.current) return;
                 const fromSquare = findFromSquare(game.current.board(), e.data.data.move, game.current.turn());
@@ -157,18 +171,20 @@ function HumanVsEngine() {
                 setHint({from, to});
                 setWaitingForHint(false);                
 				break;
-				
+				}
 			default: 
 				console.log("Unhandled message from worker", e.data);
 				break;
         }
     }
 
-    function updateGameState(move) {
+    function updateGameState(newMove) {
+        console.log(newMove);
         setWaitingForHint(false);
-        moveAudio.current.play();
-        setHistory(history => [...history, move]);
-        chessEngineWorker.current.postMessage({type: 'move', data: move});
+        // moveAudio.current.play();
+        setNeedToPlayMoveSound(true);
+        setHistory(history => [...history, newMove]);
+        chessEngineWorker.current.postMessage({type: 'move', data: newMove.move});
     }
 
 	return (
@@ -206,6 +222,7 @@ function HumanVsEngine() {
                 <div className="chessboard-wrapper">
                     <ChessBoard 
                         game = {game.current}
+                        history = {history}
                         playerColor = {playerColor}
                         onMove = {updateGameState}
                         orientation = {playerColor === 'w' ? 'white' : 'black'}

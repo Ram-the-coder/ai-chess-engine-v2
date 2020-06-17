@@ -4,7 +4,7 @@ import chessPieces from './chessPieces';
 import {isPromotion} from '../../chessEngine/util';
 import './ChessBoard.css';
 
-function ChessBoard({game, playerColor, orientation, onMove, hint, onHintShown, dimensionAdjustment}) {
+function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHintShown, dimensionAdjustment}) {
 	const [fen, setFen] = useState('start'); // Used to set/update the board position
 	const [squareStyles, setSquareStyles] = useState({}); // Defines special styles to apply to squares
 	const [selectedSquare, setselectedSquare] = useState(''); // Contains the square selected
@@ -14,12 +14,13 @@ function ChessBoard({game, playerColor, orientation, onMove, hint, onHintShown, 
 	// Update the board on change of game history
 	useEffect(() => {
 		setFen(game.fen());
-	}, [game.history()]);
+		setSquareStyles(squareStyling({history, selectedSquare}));
+	}, [history]);
 
 	// Check for hints
 	useEffect(() => {
 		if(JSON.stringify(hint) === "{}") return;
-		let newSquareStyles = squareStyling({history: game.history(), selectedSquare});
+		let newSquareStyles = squareStyling({history, selectedSquare});
 		newSquareStyles[hint.from] = {
 			animation: "from-square 1.5s ease-in-out"
 		}
@@ -32,7 +33,7 @@ function ChessBoard({game, playerColor, orientation, onMove, hint, onHintShown, 
 		setSquareStyles(newSquareStyles);
 
 		setTimeout(() => {
-			setSquareStyles(squareStyling({history: game.history(), selectedSquare}));
+			setSquareStyles(squareStyling({history, selectedSquare}));
 			onHintShown();
 		}, 3000);
 	}, [hint])
@@ -40,7 +41,7 @@ function ChessBoard({game, playerColor, orientation, onMove, hint, onHintShown, 
 	function onMouseOutSquare(square) {
 		if(selectedSquare !== '') return; // Don't change highlighting when a sq has been clicked
 		// Remove highlighting of possible moves
-		setSquareStyles(noHighlightSquareStyles(square, game.history(), selectedSquare));
+		setSquareStyles(noHighlightSquareStyles(square, history, selectedSquare));
 	}
 	
 	function onMouseOverSquare(square) {
@@ -56,14 +57,14 @@ function ChessBoard({game, playerColor, orientation, onMove, hint, onHintShown, 
 		if(moves.length === 0) return;
 
 		const squaresToHighlight = moves.map(move => move.to);
-		setSquareStyles(highlightSquareStyles(square, squaresToHighlight, game.history(), selectedSquare));
+		setSquareStyles(highlightSquareStyles(square, squaresToHighlight, history, selectedSquare));
 	}
 	
 	function onSquareClick(square) {
 		// If this square has been previously selected than unselect it
 		if(square === selectedSquare) {
 			setselectedSquare('');
-			setSquareStyles(squareStyling({selectedSquare: '', history: game.history()}));
+			setSquareStyles(squareStyling({selectedSquare: '', history}));
 			return;
 		}
 
@@ -71,7 +72,7 @@ function ChessBoard({game, playerColor, orientation, onMove, hint, onHintShown, 
 		// So just select the new square
 		if(game.turn() !== playerColor) {
 			setselectedSquare(square);
-			setSquareStyles(squareStyling({selectedSquare: square, history: game.history()}));
+			setSquareStyles(squareStyling({selectedSquare: square, history}));
 			return;
 		}
 
@@ -92,7 +93,7 @@ function ChessBoard({game, playerColor, orientation, onMove, hint, onHintShown, 
 			});
 			const squaresToHighlight = moves.map(move => move.to);
 			setselectedSquare(square);
-			setSquareStyles(highlightSquareStyles(square, squaresToHighlight, game.history(), square));
+			setSquareStyles(highlightSquareStyles(square, squaresToHighlight, history, square));
 			return;
 		}	
 		
@@ -123,8 +124,11 @@ function ChessBoard({game, playerColor, orientation, onMove, hint, onHintShown, 
 		let move = game.move(move_cfg);
 		if(move === null) return;
 		setselectedSquare('');
-		onMove(game.history()[game.history().length - 1]);
-		setSquareStyles(squareStyling({selectedSquare: '', history: game.history()}));
+		let newMove = {move: game.history()[game.history().length - 1], 
+			from: move_cfg.from,
+			to: move_cfg.to};
+		onMove(newMove);
+		setSquareStyles(squareStyling({selectedSquare: '', history: [...history, newMove]}));
 		setFen(game.fen());
 	}
 
@@ -133,8 +137,11 @@ function ChessBoard({game, playerColor, orientation, onMove, hint, onHintShown, 
 		let move = game.move(promo_move_cfg.current);
 		if(move === null) return;
 		setselectedSquare('');
-		onMove(game.history()[game.history().length - 1]);
-		setSquareStyles(squareStyling({selectedSquare: '', history: game.history()}));
+		let newMove = {move: game.history()[game.history().length - 1],
+			from: promo_move_cfg.from,
+			to: promo_move_cfg.to};
+		onMove(newMove);
+		setSquareStyles(squareStyling({selectedSquare: '', history: [...history, newMove]}));
 		setFen(game.fen());
 		setModalState(false);
 	}
@@ -176,7 +183,7 @@ function ChessBoard({game, playerColor, orientation, onMove, hint, onHintShown, 
 				squareStyles = {squareStyles}
 				allowDrag = {allowDrag}
 				calcWidth = {calcWidth}
-				transitionDuration = {200}
+				transitionDuration = {150}
 			/>
 			{
 				isModalOpen &&
@@ -197,11 +204,14 @@ function ChessBoard({game, playerColor, orientation, onMove, hint, onHintShown, 
 }
 
 function squareStyling({selectedSquare, history}) {
+	// debugger;
     const sourceSquare = history.length && history[history.length - 1].from;
-    const targetSquare = history.length && history[history.length - 1].to;
+	const targetSquare = history.length && history[history.length - 1].to;
 
     return {
-        [selectedSquare]: {backgroundColor: "rgba(255, 255, 0, 0.4)"},
+		...(selectedSquare && {
+			[selectedSquare]: {backgroundColor: "rgba(255, 216, 7, 0.4)"}	
+		}),
         ...(history.length && {
             [sourceSquare]: {
                 backgroundColor: "rgba(255, 255, 0, 0.4)"
@@ -229,8 +239,9 @@ function highlightSquareStyles(source, squaresToHighlight, history, selectedSqua
 		}), {}
 	);
 
-	if(selectedSquare) 
-		newSquareStyles = {...newSquareStyles, ...squareStyling({selectedSquare, history})};
+	newSquareStyles = {...newSquareStyles, ...squareStyling({selectedSquare, history})};
+
+	// console.log(newSquareStyles, history);
 
 	return newSquareStyles;
 }

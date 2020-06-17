@@ -1,3 +1,8 @@
+html, body, #root, .App, .game {
+	min-height: 100vh;
+	min-width: 100vw;
+}
+
 .pop-outer {
   	position: absolute!important;
   	top: 0px;
@@ -13,12 +18,24 @@
 
 .modal-title {
 	color: white;
-	font-size: 270%;
+	font-size: 3rem;
 	font-weight: bold;
 	text-align: center;
-	margin: 10%;
-	line-height: 250% !important;
+	margin: 5vh 0;
+	line-height: 3rem !important;
 	text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
+@media only screen and (max-height: 500px), (max-width: 500px) {
+	.modal-title {
+		font-size: 2rem;
+		margin: 1vh 0;
+	}
+
+	.pieces > svg {
+		width: 40px;
+		height: 40px;
+	}
 }
 
 .row {

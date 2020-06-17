@@ -33,6 +33,7 @@ function HumanVsEngine() {
 	const [playerColor, _setPlayerColor] = useState('w'); // Used to check whose turn it is (AI's or human's) and to set board orientation
 	const [openSettings, setOpenSettings] = useState(false); // State of AI settings modal
     const [hint, setHint] = useState({});
+    const [waitingForHint, _setWaitingForHint] = useState(false);
     const [openGameoverModal, setOpenGameoverModal ] = useState(false);
     const [gameoverStatus, setGameoverStatus] = useState(0);
     const [getPgnModal, setGetPgnModal] = useState(false);
@@ -46,7 +47,13 @@ function HumanVsEngine() {
 	const setPlayerColor = (newColor) => {
 		playerColorRef.current = newColor;
 		_setPlayerColor(newColor);
-	}
+    }
+    
+    const waitingForHintRef = useRef(false);
+    const setWaitingForHint = state => {
+        waitingForHintRef.current = state;
+        _setWaitingForHint(state);
+    }
 
     useEffect(() => {
 		// Instantiate the thread in which the chess engine will run
@@ -61,6 +68,7 @@ function HumanVsEngine() {
     }, []);
 
     useEffect(() => {
+        setWaitingForHint(false);
         let gameOver, status;
         ({gameOver, status} = checkGameEnd(game.current));
         if(gameOver) {
@@ -83,7 +91,8 @@ function HumanVsEngine() {
     }, [playerColor, history]);    
 
     function undoGame() {
-		if(game.current.turn() !== playerColor) return; // Disable undo while AI is thinking
+        if(game.current.turn() !== playerColor) return; // Disable undo while AI is thinking
+        setWaitingForHint(false);
         game.current.undo();
         chessEngineWorker.current.postMessage({type: 'undo'});
         setGameoverStatus(0);
@@ -106,50 +115,47 @@ function HumanVsEngine() {
         setHistory([]);
         setGameoverStatus(0);
         setOpenGameoverModal(false);
+        setWaitingForHint(false);
         newGameAudio.current.play();
     }
 
     function showHint() {
+        if(waitingForHint) return;
 		const searchData = {
             searchDepth,
             evalCap,
             maxPly: maxDepth
         }
-		chessEngineWorker.current.postMessage({type: 'search', data: searchData});
+        chessEngineWorker.current.postMessage({type: 'hint', data: searchData});
+        setWaitingForHint(true);
     }
 
     function switchSides() {
+        setWaitingForHint(false);
         setPlayerColor(playerColor === 'w' ? 'b' : 'w');
         switchAudio.current.play();
     }
 
-    function getPGN() {
-        
-    }
-
-    function loadPGN() {
-        
-    }
-
     function handleWorkerMessage(e) {
         // debugger;
+        console.log(e.data);
         switch(e.data.type) {
             case 'search':
-				if(game.current.turn() !== playerColorRef.current) {
-					// AI's move
-                    game.current.move(e.data.data.move);
-                    moveAudio.current.play();
-					chessEngineWorker.current.postMessage({type: 'move', data: e.data.data.move});
-                	setHistory(history => [...history, e.data.data.move]);
-				} else {
-					// Hint from AI
-					const fromSquare = findFromSquare(game.current.board(), e.data.data.move, game.current.turn());
-					const toSquare = findToSquare(e.data.data.move);
-					const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
-					const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
-					setHint({from, to});
-				}
-                
+                // AI's move
+                game.current.move(e.data.data.move);
+                moveAudio.current.play();
+                chessEngineWorker.current.postMessage({type: 'move', data: e.data.data.move});
+                setHistory(history => [...history, e.data.data.move]);
+            
+            case 'hint':
+                // Hint from AI
+                if(!waitingForHintRef.current) return;
+                const fromSquare = findFromSquare(game.current.board(), e.data.data.move, game.current.turn());
+                const toSquare = findToSquare(e.data.data.move);
+                const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
+                const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
+                setHint({from, to});
+                setWaitingForHint(false);                
 				break;
 				
 			default: 
@@ -159,6 +165,7 @@ function HumanVsEngine() {
     }
 
     function updateGameState(move) {
+        setWaitingForHint(false);
         moveAudio.current.play();
         setHistory(history => [...history, move]);
         chessEngineWorker.current.postMessage({type: 'move', data: move});
@@ -222,7 +229,10 @@ function HumanVsEngine() {
                             disabled={(gameoverStatus === 0) && (game.current.turn() !== playerColor)}>New Game</button>
                     <button className="btn btn-dark controls-half-width"
                             onClick={() => showHint()} 
-                            disabled={(gameoverStatus !== 0) || (game.current.turn() !== playerColor)}>Hint</button>
+                            disabled={(waitingForHint) || (gameoverStatus !== 0) || (game.current.turn() !== playerColor)}
+                    >
+                            {!waitingForHint ? 'Hint' : 'Analyzing...' }
+                    </button>
                     <button className="btn btn-dark controls-half-width"
                             onClick={() => switchSides()} 
                             disabled={(gameoverStatus !== 0) || (game.current.turn() !== playerColor)}>Switch Sides</button>

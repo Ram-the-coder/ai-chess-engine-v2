@@ -4,7 +4,7 @@ import chessPieces from './chessPieces';
 import {isPromotion} from '../../chessEngine/util';
 import './ChessBoard.css';
 
-function ChessBoard({game, orientation, onMove, hint, onHintShown, dimensionAdjustment}) {
+function ChessBoard({game, playerColor, orientation, onMove, hint, onHintShown, dimensionAdjustment}) {
 	const [fen, setFen] = useState('start'); // Used to set/update the board position
 	const [squareStyles, setSquareStyles] = useState({}); // Defines special styles to apply to squares
 	const [selectedSquare, setselectedSquare] = useState(''); // Contains the square selected
@@ -38,11 +38,15 @@ function ChessBoard({game, orientation, onMove, hint, onHintShown, dimensionAdju
 	}, [hint])
 
 	function onMouseOutSquare(square) {
+		if(selectedSquare !== '') return; // Don't change highlighting when a sq has been clicked
 		// Remove highlighting of possible moves
 		setSquareStyles(noHighlightSquareStyles(square, game.history(), selectedSquare));
 	}
 	
 	function onMouseOverSquare(square) {
+		if(game.turn() !== playerColor) return; // Don't show possible moves when opponent is playing
+		if(selectedSquare !== '') return; // Don't show possible moves from the current sq when another sq has already been selected
+
 		// Highlight possible moves
 		let moves = game.moves({
 			square,
@@ -56,26 +60,44 @@ function ChessBoard({game, orientation, onMove, hint, onHintShown, dimensionAdju
 	}
 	
 	function onSquareClick(square) {
-		if(square == selectedSquare) {
-			// If this square has been previously selected than unselect it
+		// If this square has been previously selected than unselect it
+		if(square === selectedSquare) {
 			setselectedSquare('');
 			setSquareStyles(squareStyling({selectedSquare: '', history: game.history()}));
 			return;
 		}
 
+		// If a square is being click during the opponent's turn, then we do not need to perform any moves onSquareClick
+		// So just select the new square
+		if(game.turn() !== playerColor) {
+			setselectedSquare(square);
+			setSquareStyles(squareStyling({selectedSquare: square, history: game.history()}));
+			return;
+		}
+
 		// If a move is possible between previously selected square and the currently selected square
 		// then make that move, else just update the selected square to the currently selected one
-		// and remove highlighting of possible moves
-		let move = game.moves({
+		// and highlight possible moves from that square
+		let move = game.move({
 			from: selectedSquare,
 			to: square,
 			promotion: 'q'
 		});
 
-		setselectedSquare(square);
-		setSquareStyles(squareStyling({selectedSquare: square, history: game.history()}));
-
-		if(move === null || !selectedSquare) return;		
+		if(move === null) {
+			// Move not possible
+			let moves = game.moves({
+				square,
+				verbose: true
+			});
+			const squaresToHighlight = moves.map(move => move.to);
+			setselectedSquare(square);
+			setSquareStyles(highlightSquareStyles(square, squaresToHighlight, game.history(), square));
+			return;
+		}	
+		
+		// Move is possible
+		game.undo();	
 		makeMove({
 			from: selectedSquare,
 			to: square,
@@ -118,7 +140,7 @@ function ChessBoard({game, orientation, onMove, hint, onHintShown, dimensionAdju
 	}
 
 	function allowDrag({piece}) {
-		return piece[0] == game.turn();
+		return piece[0] === playerColor;
 	}
 
 	function calcWidth({screenHeight, screenWidth}) {
@@ -195,12 +217,12 @@ function squareStyling({selectedSquare, history}) {
 
 // Return styles to highlight possible moves' to-square along with the selected square and last move
 function highlightSquareStyles(source, squaresToHighlight, history, selectedSquare) {
-	let newSquareStyles = [source, ...squaresToHighlight].reduce(
+	let newSquareStyles = squaresToHighlight.reduce(
 		(all, cur) => ({
 			...all,
 			...{
 				[cur]: {
-					background: "radial-gradient(circle, #fffc00 26%, transparent 30%)",
+					background: "radial-gradient(circle, rgba(0,0,0,0.3) 21%, transparent 21%)",
 					borderRadius: "50%"
 				}
 			},

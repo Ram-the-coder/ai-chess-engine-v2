@@ -182,6 +182,7 @@ function HumanVsEngine() {
                 <div className="chessboard-wrapper">
                     <ChessBoard 
                         game = {game.current}
+                        playerColor = {playerColor}
                         onMove = {updateGameState}
                         orientation = {playerColor === 'w' ? 'white' : 'black'}
                         hint = {hint}

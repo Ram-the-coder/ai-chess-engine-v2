@@ -1,8 +1,8 @@
-import React, {useState} from 'react';
-import {Link} from 'react-router-dom';
+import React from 'react';
+import {Link, useLocation} from 'react-router-dom';
 
 export default function Navbar() {
-    const [active, setActive] = useState("home")
+    let active = useLocation().pathname;
     return (
         <nav className="navbar navbar-expand-sm navbar-dark bg-dark">
             <Link className="navbar-brand" to="/">Chess</Link>
@@ -12,13 +12,13 @@ export default function Navbar() {
             <div class="collapse navbar-collapse" id="my-nav">
                 <ul class="navbar-nav ml-auto">
                     <li className="nav-item">
-                        <Link className="nav-link" to="/">Home</Link>
+                        <Link className={`nav-link ${active === '/' && 'active'}`} to="/">Home</Link>
                     </li>
                     <li className="nav-item">
-                        <Link className="nav-link" to="/ai">Play vs AI</Link>
+                        <Link className={`nav-link ${active === '/ai' && 'active'}`} to="/ai">Play vs AI</Link>
                     </li>
                     <li className="nav-item">
-                        <Link className="nav-link" to="/analysis">Analysis Board</Link>
+                        <Link className={`nav-link ${active === '/analysis' && 'active'}`} to="/analysis">Analysis Board</Link>
                     </li>
                 </ul>
             </div>

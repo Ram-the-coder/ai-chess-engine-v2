@@ -18,6 +18,10 @@ main {
 	background-color: whitesmoke;
 }
 
+.container {
+	padding: 15px;
+}
+
 .pop-outer {
   	position: absolute!important;
   	top: 0px;

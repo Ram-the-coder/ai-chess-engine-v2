@@ -16,6 +16,10 @@ export default function Home() {
                 Though it is nowhere as powerful or as fast as the popular stockfish (the 2nd most powerful chess engine), 
                 it still can play well enough to beat a novice easily.
             </p>
+            <p><small>
+                Tip: If you feel that the AI is weak, try increase the search depth / max depth under the AI Settings. 
+                Alternatively if you feel that it is strong, try decreasing the seach depth / max depth.
+            </small></p>
             <div className="btn-group">
                 <a href="https://github.com/Ram-the-coder/ai-chess-engine-v2/" target="_blank" className="btn btn-dark github">
                     <img src={GithubLogo} />

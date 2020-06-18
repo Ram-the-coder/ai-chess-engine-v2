@@ -1,6 +1,21 @@
-html, body, #root, .App, .game {
+html, body, #root, .App {
 	min-height: 100vh;
 	min-width: 100vw;
+}
+
+main, .game {
+	min-height: calc(100vh - 86px);
+	min-width: 100vw;
+}
+
+main {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.App {
+	background-color: whitesmoke;
 }
 
 .pop-outer {
@@ -61,4 +76,12 @@ html, body, #root, .App, .game {
 	50% {opacity: 1;}
 
 	100% {opacity: 0;}
+}
+
+footer {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 5px;
+	/* background-color: whitesmoke; */
 }

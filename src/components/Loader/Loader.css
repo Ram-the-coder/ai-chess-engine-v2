@@ -1,0 +1,201 @@
+.container {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+}
+.container .l-container {
+	width: 33%;
+	min-height: 200px;
+	position: relative;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+.chess-loader {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 90px;
+	overflow: hidden;
+}
+
+.chess-loader > svg {
+	position: absolute;
+	transform-origin: 50% 100%;
+	opacity: 0;
+}
+
+.chess-loader .first {
+	animation: chessFalling-1 4s 0s linear infinite;
+}
+
+.chess-loader .first path {
+	fill: #f07167;
+}
+
+@keyframes chessFalling-1 {
+	from {
+		transform: rotate(15deg) translateY(-400%);
+		opacity: 0;
+   }
+	10% {
+		transform: rotate(15deg) translateY(-200%);
+		opacity: 1;
+   }
+	20% {
+		transform: rotate(15deg);
+   }
+	22% {
+		transform: rotate(-12deg);
+   }
+	23% {
+		transform: rotate(5deg);
+   }
+	24% {
+		transform: rotate(-3deg);
+   }
+	35% {
+		transform: scaleY(1);
+		opacity: 1;
+   }
+	45% {
+		transform: scaleY(0);
+		opacity: 0;
+   }
+	to {
+		transform: scaleY(0) translateY(-400%);
+		opacity: 0;
+   }
+}
+.chess-loader .second {
+	color: #00afb9;
+	animation: chessFalling-2 4s 1s linear infinite;
+}
+
+.chess-loader .second path {
+	fill: #00afb9;
+}
+
+@keyframes chessFalling-2 {
+	from {
+		transform: rotate(15deg) translateY(-400%);
+		opacity: 0;
+   }
+	10% {
+		transform: rotate(15deg) translateY(-200%);
+		opacity: 1;
+   }
+	20% {
+		transform: rotate(15deg);
+   }
+	22% {
+		transform: rotate(-12deg);
+   }
+	23% {
+		transform: rotate(5deg);
+   }
+	24% {
+		transform: rotate(-3deg);
+   }
+	35% {
+		transform: scaleY(1);
+		opacity: 1;
+   }
+	45% {
+		transform: scaleY(0);
+		opacity: 0;
+   }
+	to {
+		transform: scaleY(0) translateY(-400%);
+		opacity: 0;
+   }
+}
+.chess-loader .third {
+	color: #5e6472;
+	animation: chessFalling-3 4s 2s linear infinite;
+}
+
+.chess-loader .third path {
+	fill: #5e6472;
+}
+
+@keyframes chessFalling-3 {
+	from {
+		transform: rotate(15deg) translateY(-400%);
+		opacity: 0;
+   }
+	10% {
+		transform: rotate(15deg) translateY(-200%);
+		opacity: 1;
+   }
+	20% {
+		transform: rotate(15deg);
+   }
+	22% {
+		transform: rotate(-12deg);
+   }
+	23% {
+		transform: rotate(5deg);
+   }
+	24% {
+		transform: rotate(-3deg);
+   }
+	35% {
+		transform: scaleY(1);
+		opacity: 1;
+   }
+	45% {
+		transform: scaleY(0);
+		opacity: 0;
+   }
+	to {
+		transform: scaleY(0) translateY(-400%);
+		opacity: 0;
+   }
+}
+.chess-loader .fourth {
+	animation: chessFalling-4 4s 3s linear infinite;
+}
+
+.chess-loader .fourth path {
+	fill: #0081a7;
+}
+
+@keyframes chessFalling-4 {
+	from {
+		transform: rotate(15deg) translateY(-400%);
+		opacity: 0;
+   }
+	10% {
+		transform: rotate(15deg) translateY(-200%);
+		opacity: 1;
+   }
+	20% {
+		transform: rotate(15deg);
+   }
+	22% {
+		transform: rotate(-12deg);
+   }
+	23% {
+		transform: rotate(5deg);
+   }
+	24% {
+		transform: rotate(-3deg);
+   }
+	35% {
+		transform: scaleY(1);
+		opacity: 1;
+   }
+	45% {
+		transform: scaleY(0);
+		opacity: 0;
+   }
+	to {
+		transform: scaleY(0) translateY(-400%);
+		opacity: 0;
+   }
+}

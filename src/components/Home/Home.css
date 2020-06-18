@@ -1,0 +1,41 @@
+.github img {
+    margin-right: 10px;
+}
+
+.github {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-group {
+    flex-wrap: wrap;
+}
+
+@media only screen and (max-width: 415px) {
+    .btn-group {
+        display: flex;
+    }
+    .btn-group .btn {
+        display: block;
+        width: 100%;
+        border-radius: .25rem!important;
+        margin: 0.25rem 0;
+    }    
+}
+
+p {
+    text-align: justify;
+}
+
+@media only screen and (min-width: 992px) {
+    .about {
+        max-width: 720px;
+    }
+}

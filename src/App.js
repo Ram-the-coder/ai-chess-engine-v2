@@ -1,14 +1,35 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, {lazy, Suspense} from 'react';
+import {
+	BrowserRouter as Router,
+	Switch,
+	Route
+} from 'react-router-dom';
 import './App.css';
 
-import HumanVsEngine from './components/Game/HumanVsEngine';
+import Loader from './components/Loader/Loader'
+import Navbar from './components/Navbar/Navbar';
+import Footer from './components/Footer/Footer';
+const Home = lazy(() => import('./components/Home/Home'));
+const HumanVsEngine = lazy(() => import('./components/Game/HumanVsEngine'));
+const Analysis = lazy(() => import('./components/Game/Analysis'));
 
 function App() {
 	return (
-		<div className="App">
-			<HumanVsEngine />
-		</div>
+		<Router>
+			<div className="App">
+				<Navbar />
+				<main>
+					<Suspense fallback={<Loader />}>
+						<Switch>
+							<Route exact path="/" component={Home} />
+							<Route exact path="/ai" component={HumanVsEngine} />
+							<Route exact path="/analysis" component={Analysis} />
+						</Switch>
+					</Suspense>
+				</main>
+				<Footer />
+			</div>
+		</Router>
 	);
 }
 

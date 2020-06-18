@@ -5,3 +5,4 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 # Credits
 The sounds used in this are free sounds taken from lichess repository https://github.com/ornicar/lila/
+The loader uses free chess icons from font-awesome

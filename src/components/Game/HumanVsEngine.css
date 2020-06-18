@@ -21,12 +21,26 @@
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
-.settings-wrapper > div > label {
+.settings-wrapper label {
     text-align: left;
 }
 
-.settings-wrapper > div > label:hover {
+.settings-wrapper label:hover {
     cursor: pointer;
+}
+
+.settings-wrapper .info > *{
+    margin: 0.5rem;
+    display: block;
+    max-width: 500px;
+}
+
+.myForm {
+    width: 100%;
+}
+
+.myForm > * {
+    margin: 0.5rem 0;
 }
 
 .btn-row {

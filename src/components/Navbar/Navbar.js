@@ -9,8 +9,8 @@ export default function Navbar() {
             <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#my-nav" aria-controls="my-nav" aria-expanded="false" aria-label="Toggle navigation">
                 <span className="navbar-toggler-icon" />
             </button>
-            <div class="collapse navbar-collapse" id="my-nav">
-                <ul class="navbar-nav ml-auto">
+            <div className="collapse navbar-collapse" id="my-nav">
+                <ul className="navbar-nav ml-auto">
                     <li className="nav-item">
                         <Link className={`nav-link ${active === '/' && 'active'}`} to="/">Home</Link>
                     </li>

@@ -129,6 +129,7 @@ export function calculatePointsByPiece(board) {
           case 'n': pt = 30; break;
           case 'q': pt = 90; break;
           case 'k': break;
+          default: console.error("This should not happen"); break;
         }
         if(board[i][j].color === 'b')
           pt = -pt;
@@ -336,7 +337,7 @@ export function findFromSquare(board, move, turn) {
           return {i: 0, j: 0};
 
     case 'n':   
-          if(sameAlpha != -1) {
+          if(sameAlpha !== -1) {
             let i = sameAlpha;
             let j1, j2;
             switch(i - toSquare.i) {
@@ -348,6 +349,7 @@ export function findFromSquare(board, move, turn) {
               case 1: j1 = toSquare.j - 2;
                   j2 = toSquare.j + 2;
                   break;
+              default: console.error("This should not happen"); break;
             }
             if(j1 >= 0 && board[i][j1] && board[i][j1].type === piece && board[i][j1].color === turn)
               return {i, j: j1}
@@ -358,7 +360,7 @@ export function findFromSquare(board, move, turn) {
             return {i: 0, j: 0};
           }
 
-          if(sameRow != -1) {
+          if(sameRow !== -1) {
             let j = sameRow;
             let i1, i2;
             switch(j - toSquare.j) {
@@ -370,6 +372,7 @@ export function findFromSquare(board, move, turn) {
               case 1: i1 = toSquare.i - 2;
                   i2 = toSquare.i + 2;
                   break;
+              default: console.error("This should not happen"); break;
             }
             if(i1 >= 0 && board[i1][j] && board[i1][j].type === piece && board[i1][j].color === turn)
               return {i: i1, j}
@@ -393,6 +396,8 @@ export function findFromSquare(board, move, turn) {
 
           console.error("Unknown");
           return {i: 0, j: 0};
+
+    default: console.error("this should not happen"); break;
   }
   return fromSquare;
 }

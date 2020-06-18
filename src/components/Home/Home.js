@@ -17,8 +17,8 @@ export default function Home() {
                 it still can play well enough to beat a novice easily.
             </p>
             <div className="btn-group">
-                <a href="https://github.com/Ram-the-coder/ai-chess-engine-v2/" target="_blank" className="btn btn-dark github">
-                    <img src={GithubLogo} />
+                <a href="https://github.com/Ram-the-coder/ai-chess-engine-v2/" target="_blank" rel="noopener noreferrer" className="btn btn-dark github">
+                    <img src={GithubLogo} alt="Github Logo" />
                     <span>Github Repo</span>
                 </a>
                 

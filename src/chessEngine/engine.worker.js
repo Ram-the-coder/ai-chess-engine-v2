@@ -4,7 +4,7 @@ import ChessEngine from './AI';
 let game, engine;
 
 self.addEventListener('message', e => {
-    console.log(e.data);
+    // console.log(e.data);
     switch(e.data.type) {
 
         case 'init': 
@@ -13,7 +13,7 @@ self.addEventListener('message', e => {
 
         case 'move':
             game.move(e.data.data);
-            console.log(game.ascii());
+            // console.log(game.ascii());
             break;        
 
         case 'hint':
@@ -24,7 +24,7 @@ self.addEventListener('message', e => {
 
         case 'undo':
             game.undo();
-            console.log(game.ascii());
+            // console.log(game.ascii());
             break;        
 
         case 'reset':
@@ -38,10 +38,10 @@ self.addEventListener('message', e => {
 })
 
 function initGame(startPosition) {
-    console.log('initGame');
+    // console.log('initGame');
     game = startPosition ? new Chess(startPosition) : new Chess();
     engine = new ChessEngine();
-    console.log(game.ascii());
+    // console.log(game.ascii());
 }
 
 function resetGame(startPosition) {

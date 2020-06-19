@@ -76,18 +76,15 @@ function HumanVsEngine() {
         chessEngineWorker.current.postMessage({type:'init'});
 
         function handleWorkerMessage(e) {
-            // debugger;
-            console.log(e.data);
+            // console.log(e.data);
             switch(e.data.type) {
                 case 'search':{
                     // AI's move                    
                     chessEngineWorker.current.postMessage({type: 'move', data: e.data.data.move});
-                    // debugger;
                     const fromSquare = findFromSquare(game.current.board(), e.data.data.move, game.current.turn());
                     const toSquare = findToSquare(e.data.data.move);
                     const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
                     const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
-                    console.log(from, to);
                     game.current.move(e.data.data.move);
                     setHistory(history => [...history, {move: e.data.data.move, from, to}]);
                     setNeedToPlayMoveSound(true);
@@ -189,9 +186,8 @@ function HumanVsEngine() {
     
 
     function updateGameState(newMove) {
-        console.log(newMove);
+        // console.log(newMove);
         setWaitingForHint(false);
-        // moveAudio.current.play();
         setNeedToPlayMoveSound(true);
         setHistory(history => [...history, newMove]);
         chessEngineWorker.current.postMessage({type: 'move', data: newMove.move});

@@ -15,6 +15,7 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 	let bestScore = -Infinity;
 	let currentDepth ;
 	let nodesEvaluated = 0;
+	let pvLine = [];
 	// let pvtable = new PvTable();
 	let killerTable = new KillerTable(3);
 	let historyHeuristic = new HistoryHeuristic();
@@ -25,7 +26,7 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 	// console.log({EVAL_CAP, MAX_PLY});
 	startSearch(game);
 
-	return {bestMove, nodesEvaluated};
+	return {bestMove, nodesEvaluated, pvLine};
 
 	function startSearch(game) {
 
@@ -38,7 +39,8 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 			// console.log()
 			// pvMoves = pvtable.getPvLine(game, hash, currentDepth);
 			bestMove = hashTable.probePvMove(hash);
-			console.log({perf: fhf/fh, currentDepth, bestScore, bestMove, nodesEvaluated, detail: bestStats.detail});
+			pvLine = hashTable.probePvLine(game, hash);
+			// console.log({perf: fhf/fh, currentDepth, bestScore, bestMove, nodesEvaluated, detail: bestStats.detail});
 		}
 
 	}

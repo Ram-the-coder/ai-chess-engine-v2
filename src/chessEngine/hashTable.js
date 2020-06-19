@@ -1,3 +1,5 @@
+import {recomputeZobristHash} from './zobristHash';
+
 // Transposition Table / PV Table
 const HFNONE = 0;
 const HFALPHA = 1;
@@ -136,6 +138,27 @@ export default class HashTable {
 
 		this.hit++;
 		return this.table[hash].bestMove;
+	}
+
+	probePvLine(game, zobristKey) {
+		let pvLine = [];
+		let pvMove;
+		let count = 0;
+		while(true) {
+			pvMove = this.probePvMove(zobristKey);
+			if(pvMove === null) break;
+			pvLine.push(pvMove);
+			zobristKey = recomputeZobristHash(zobristKey, game.board(), pvMove, game.turn());
+			game.move(pvMove);
+			++count;
+		}
+
+		while(count > 0) {
+			game.undo();
+			--count;
+		}
+
+		return pvLine;
 	}
 
 	storeQuiescenceHashEntry(bestMove, zobristKey, val, masterAncient) {

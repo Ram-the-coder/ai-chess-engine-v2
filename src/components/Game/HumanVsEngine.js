@@ -18,6 +18,8 @@ import './HumanVsEngine.css';
 
 function HumanVsEngine() {
 
+    /********** States and Refs **********/
+
 	// game - used to store game state, generate moves, etc.
 	// Can't be set as state as it has many hidden attributes that change when using its methods.
 	// So we can't make ues of setState on game
@@ -26,36 +28,43 @@ function HumanVsEngine() {
 	// The worker thread is initialized in the useEffect function as for some reason using useRef to initialize causes it 
     // to initialize more than once - in result creating more than one worker thread
 
-    const [history, setHistory] = useState([]); // Used as state -> condition on which to re-render
+    
     const [searchDepth, setSearchDepth] = useState(3); // Search engine-related state
     const [maxDepth, setMaxDepth] = useState(3); // Search engine-related state
     const [evalCap, setEvalCap] = useState(15000); // Search engine-related state
-	const [playerColor, _setPlayerColor] = useState('w'); // Used to check whose turn it is (AI's or human's) and to set board orientation
-	const [openSettings, setOpenSettings] = useState(false); // State of AI settings modal
-    const [hint, setHint] = useState({});
-    const [waitingForHint, _setWaitingForHint] = useState(false);
 
-    const [openGameoverModal, setOpenGameoverModal ] = useState(false);
-    const [gameoverStatus, setGameoverStatus] = useState(0);
-    const [getPgnModal, setGetPgnModal] = useState(false);
-    const [needToPlayMoveSound, setNeedToPlayMoveSound] = useState(false);
+    const [history, setHistory] = useState([]); // Used as state -> condition on which to re-render on move
 
-    const moveAudio = useRef(null);
-    const newGameAudio = useRef(null);
-    const undoAudio = useRef(null);
-    const switchAudio = useRef(null);
-
-	const playerColorRef = useRef('w');
+    const [playerColor, _setPlayerColor] = useState('w'); // Used to check whose turn it is (AI's or human's) and to set board orientation
+    const playerColorRef = useRef('w'); // Used to access player color info in on message event handler
 	const setPlayerColor = (newColor) => {
 		playerColorRef.current = newColor;
 		_setPlayerColor(newColor);
     }
-    
+
+    const [hint, setHint] = useState({});
+    const [waitingForHint, _setWaitingForHint] = useState(false);
+
     const waitingForHintRef = useRef(false);
     const setWaitingForHint = state => {
         waitingForHintRef.current = state;
         _setWaitingForHint(state);
     }
+
+    const [gameoverStatus, setGameoverStatus] = useState(0); // Contains 
+    const [needToPlayMoveSound, setNeedToPlayMoveSound] = useState(false); // Used to defer playing of move sound after render
+
+	const [openSettings, setOpenSettings] = useState(false); // State of AI settings modal
+    const [openGameoverModal, setOpenGameoverModal ] = useState(false);
+    const [getPgnModal, setGetPgnModal] = useState(false); 
+    
+    const moveAudio = useRef(null);
+    const newGameAudio = useRef(null);
+    const undoAudio = useRef(null);
+    const switchAudio = useRef(null); 
+
+
+    /********** Memoized functions **********/
 
     const letAiMakeMove = useCallback(
         () => {
@@ -68,6 +77,9 @@ function HumanVsEngine() {
         }, 
         [searchDepth, evalCap, maxDepth]
     ); 
+    
+
+    /********** Effects **********/
 
     useEffect(() => {
 		// Instantiate the thread in which the chess engine will run
@@ -113,6 +125,7 @@ function HumanVsEngine() {
 		}
     }, []);
 
+    // Fires after move - to play move sound
     useEffect(() => {
         if(needToPlayMoveSound) {
             moveAudio.current.play(); 
@@ -120,7 +133,8 @@ function HumanVsEngine() {
         }
     }, [needToPlayMoveSound]);
 
-
+    
+    // Fires after change in playerColor or history to let AI make its move if it is its turn
     useEffect(() => {
         setWaitingForHint(false);
         let gameOver, status;
@@ -135,7 +149,8 @@ function HumanVsEngine() {
 
     }, [playerColor, history, letAiMakeMove]);    
 
-    
+
+    /********** Functions used by the component **********/
 
     function undoGame() {
         if(game.current.turn() !== playerColor) return; // Disable undo while AI is thinking
@@ -184,16 +199,19 @@ function HumanVsEngine() {
     }
 
     
-
+    // Passed to ChessBoard component to call on move
     function updateGameState(newMove) {
-        // console.log(newMove);
         setWaitingForHint(false);
         setNeedToPlayMoveSound(true);
         setHistory(history => [...history, newMove]);
         chessEngineWorker.current.postMessage({type: 'move', data: newMove.move});
     }
 
+    // Passed to ChessBoard component to call after the hint has been shown
     const onHintShown = useCallback(() => {setHint({})}, []);
+
+
+    /********** JSX **********/
 
 	return (
         <div className="game">
@@ -281,6 +299,8 @@ function HumanVsEngine() {
         </div>
     );
 }
+
+/********** Functions that are independant of state and props **********/
 
 const gameEndStatusCode = {
 	CHECKMATE_BY_WHITE: 1,

@@ -5,17 +5,23 @@ import {isPromotion} from '../../chessEngine/util';
 import './ChessBoard.css';
 
 function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHintShown, dimensionAdjustment}) {
+
+	/********** States and Refs **********/
 	const [fen, setFen] = useState('start'); // Used to set/update the board position
 	const [squareStyles, setSquareStyles] = useState({}); // Defines special styles to apply to squares
 	const [selectedSquare, setselectedSquare] = useState(''); // Contains the square selected
 	const [squaresToHighlight, setSquaresToHighlight] = useState([]);
 	const [isModalOpen, setModalState] = useState(false); // Piece Promotion Modal
-	const promo_move_cfg = useRef({});
+	const promo_move_cfg = useRef({}); // Used to store the move_cfg between making a promotion move 
+	// and selecting a piece to promote to
 
-	// Update the board on change of game history
+
+	/********** Effects **********/
+	// Fires to update the board on change of game history
+	// or to render style changes like selectedSquare, squaresToHighlight and hint
 	useLayoutEffect(() => {
 		setFen(game.fen());
-		let newSquareStyles = highlightSquareStyles('', squaresToHighlight, history, selectedSquare);
+		let newSquareStyles = highlightSquareStyles(squaresToHighlight, history, selectedSquare);
 		if(JSON.stringify(hint) !== "{}") {
 			newSquareStyles[hint.from] = {
 				animation: "from-square 1.5s ease-in-out"
@@ -34,15 +40,18 @@ function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHi
 		setSquareStyles(newSquareStyles);
 	}, [history, selectedSquare, game, squaresToHighlight, hint, onHintShown]);
 
+
+
+	/********** Functions used by the component **********/
+
 	function onMouseOutSquare(square) {
-		if(selectedSquare !== '') return; // Don't change highlighting when a sq has been clicked
-		// Remove highlighting of possible moves
-		setSquaresToHighlight([]);
+		if(selectedSquare !== '') return; // Don't change highlighting when a sq has been selected
+		setSquaresToHighlight([]); // Remove highlighting of possible moves
 	}
 	
 	function onMouseOverSquare(square) {
-		if(game.turn() !== playerColor) return; // Don't show possible moves when opponent is playing
-		if(selectedSquare !== '') return; // Don't show possible moves from the current sq when another sq has already been selected
+		if(game.turn() !== playerColor) return; // Don't highlight possible moves when opponent is playing
+		if(selectedSquare !== '') return; // Don't highlight possible moves from the current sq when another sq has already been selected
 
 		// Highlight possible moves
 		let moves = game.moves({
@@ -163,6 +172,9 @@ function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHi
 		return Math.min(560, Math.min(availHeight, availWidth));
 	}
 
+
+	/********** JSX **********/
+
 	return (
 		<div className="myChessboard">
 			<Chessboard 
@@ -217,8 +229,11 @@ function squareStyling({selectedSquare, history}) {
     };
 }
 
+
+/********** Functions that are independant of state and props **********/
+
 // Return styles to highlight possible moves' to-square along with the selected square and last move
-function highlightSquareStyles(source, squaresToHighlight, history, selectedSquare) {
+function highlightSquareStyles(squaresToHighlight, history, selectedSquare) {
 	let newSquareStyles = squaresToHighlight.reduce(
 		(all, cur) => ({
 			...all,

@@ -1,6 +1,4 @@
- // const {transpositionTable} = require('./allFuncs.js');
-// const {Chess} = require('../node_modules/chess.js/chess.js');
-import {Chess} from '../chess.js/chess.js';
+import {Chess} from 'chess.js';
 import * as zobristHash from '../zobristHash';
 
 const game = new Chess();

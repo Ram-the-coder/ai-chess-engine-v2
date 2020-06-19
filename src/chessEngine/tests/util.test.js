@@ -1,5 +1,5 @@
 import * as util from '../util';
-import {Chess} from '../chess.js/chess.js';
+import {Chess} from 'chess.js';
 
 // getCoords
 const getCoordsTestCases = [

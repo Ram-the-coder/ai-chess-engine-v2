@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useRef, useLayoutEffect} from 'react';
 import Chessboard from 'chessboardjsx';
 import chessPieces from './chessPieces';
 import {isPromotion} from '../../chessEngine/util';
@@ -8,40 +8,36 @@ function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHi
 	const [fen, setFen] = useState('start'); // Used to set/update the board position
 	const [squareStyles, setSquareStyles] = useState({}); // Defines special styles to apply to squares
 	const [selectedSquare, setselectedSquare] = useState(''); // Contains the square selected
+	const [squaresToHighlight, setSquaresToHighlight] = useState([]);
 	const [isModalOpen, setModalState] = useState(false); // Piece Promotion Modal
 	const promo_move_cfg = useRef({});
 
 	// Update the board on change of game history
-	useEffect(() => {
+	useLayoutEffect(() => {
 		setFen(game.fen());
-		setSquareStyles(squareStyling({history, selectedSquare}));
-	}, [history]);
+		let newSquareStyles = highlightSquareStyles('', squaresToHighlight, history, selectedSquare);
+		if(JSON.stringify(hint) !== "{}") {
+			newSquareStyles[hint.from] = {
+				animation: "from-square 1.5s ease-in-out"
+			}
+	
+			newSquareStyles[hint.to] = {
+				animation: "to-square 1.5s ease-in-out",
+				animationDelay: "1.5s"
+			}	
 
-	// Check for hints
-	useEffect(() => {
-		if(JSON.stringify(hint) === "{}") return;
-		let newSquareStyles = squareStyling({history, selectedSquare});
-		newSquareStyles[hint.from] = {
-			animation: "from-square 1.5s ease-in-out"
-		}
-
-		newSquareStyles[hint.to] = {
-			animation: "to-square 1.5s ease-in-out",
-			animationDelay: "1.5s"
+			setTimeout(() => {
+				onHintShown();
+			}, 3000);
 		}
 
 		setSquareStyles(newSquareStyles);
-
-		setTimeout(() => {
-			setSquareStyles(squareStyling({history, selectedSquare}));
-			onHintShown();
-		}, 3000);
-	}, [hint])
+	}, [history, selectedSquare, game, squaresToHighlight, hint, onHintShown]);
 
 	function onMouseOutSquare(square) {
 		if(selectedSquare !== '') return; // Don't change highlighting when a sq has been clicked
 		// Remove highlighting of possible moves
-		setSquareStyles(noHighlightSquareStyles(square, history, selectedSquare));
+		setSquaresToHighlight([]);
 	}
 	
 	function onMouseOverSquare(square) {
@@ -56,15 +52,15 @@ function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHi
 
 		if(moves.length === 0) return;
 
-		const squaresToHighlight = moves.map(move => move.to);
-		setSquareStyles(highlightSquareStyles(square, squaresToHighlight, history, selectedSquare));
+		const newSquaresToHighlight = moves.map(move => move.to);
+		setSquaresToHighlight(newSquaresToHighlight);
 	}
 	
 	function onSquareClick(square) {
 		// If this square has been previously selected than unselect it
 		if(square === selectedSquare) {
 			setselectedSquare('');
-			setSquareStyles(squareStyling({selectedSquare: '', history}));
+			setSquaresToHighlight([]);
 			return;
 		}
 
@@ -72,7 +68,6 @@ function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHi
 		// So just select the new square
 		if(game.turn() !== playerColor) {
 			setselectedSquare(square);
-			setSquareStyles(squareStyling({selectedSquare: square, history}));
 			return;
 		}
 
@@ -91,9 +86,9 @@ function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHi
 				square,
 				verbose: true
 			});
-			const squaresToHighlight = moves.map(move => move.to);
+			const newSquaresToHighlight = moves.map(move => move.to);
 			setselectedSquare(square);
-			setSquareStyles(highlightSquareStyles(square, squaresToHighlight, history, square));
+			setSquaresToHighlight(newSquaresToHighlight);
 			return;
 		}	
 		
@@ -128,21 +123,18 @@ function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHi
 			from: move_cfg.from,
 			to: move_cfg.to};
 		onMove(newMove);
-		setSquareStyles(squareStyling({selectedSquare: '', history: [...history, newMove]}));
-		setFen(game.fen());
 	}
 
 	function setPromotion(piece) {
 		promo_move_cfg.current.promotion = piece;
+		console.log(promo_move_cfg);
 		let move = game.move(promo_move_cfg.current);
 		if(move === null) return;
 		setselectedSquare('');
 		let newMove = {move: game.history()[game.history().length - 1],
-			from: promo_move_cfg.from,
-			to: promo_move_cfg.to};
+			from: promo_move_cfg.current.from,
+			to: promo_move_cfg.current.to};
 		onMove(newMove);
-		setSquareStyles(squareStyling({selectedSquare: '', history: [...history, newMove]}));
-		setFen(game.fen());
 		setModalState(false);
 	}
 
@@ -241,14 +233,7 @@ function highlightSquareStyles(source, squaresToHighlight, history, selectedSqua
 
 	newSquareStyles = {...newSquareStyles, ...squareStyling({selectedSquare, history})};
 
-	// console.log(newSquareStyles, history);
-
 	return newSquareStyles;
-}
-
-// Return styles that only highlight the selected square and last move
-function noHighlightSquareStyles(square, history, selectedSquare) {
-	return squareStyling({selectedSquare, history});
 }
 
 export default ChessBoard;

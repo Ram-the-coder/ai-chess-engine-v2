@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import ChessBoard from '../ChessBoard/ChessBoard';
 import Chess from 'chess.js';
 import {calculatePointsByPiece, findFromSquare, findToSquare} from '../../chessEngine/util';
@@ -21,10 +21,10 @@ function HumanVsEngine() {
 	// game - used to store game state, generate moves, etc.
 	// Can't be set as state as it has many hidden attributes that change when using its methods.
 	// So we can't make ues of setState on game
-	const game = useRef(new Chess());
+    const game = useRef(new Chess());
 	const chessEngineWorker = useRef(); // The worker thread
 	// The worker thread is initialized in the useEffect function as for some reason using useRef to initialize causes it 
-	// to initialize more than once - in result creating more than one worker thread
+    // to initialize more than once - in result creating more than one worker thread
 
     const [history, setHistory] = useState([]); // Used as state -> condition on which to re-render
     const [searchDepth, setSearchDepth] = useState(3); // Search engine-related state
@@ -34,6 +34,7 @@ function HumanVsEngine() {
 	const [openSettings, setOpenSettings] = useState(false); // State of AI settings modal
     const [hint, setHint] = useState({});
     const [waitingForHint, _setWaitingForHint] = useState(false);
+
     const [openGameoverModal, setOpenGameoverModal ] = useState(false);
     const [gameoverStatus, setGameoverStatus] = useState(0);
     const [getPgnModal, setGetPgnModal] = useState(false);
@@ -56,11 +57,58 @@ function HumanVsEngine() {
         _setWaitingForHint(state);
     }
 
+    const letAiMakeMove = useCallback(
+        () => {
+            const searchData = {
+                searchDepth,
+                evalCap,
+                maxPly: maxDepth
+            }
+            setTimeout(() => chessEngineWorker.current.postMessage({type: 'search', data: searchData}), 250);
+        }, 
+        [searchDepth, evalCap, maxDepth]
+    ); 
+
     useEffect(() => {
 		// Instantiate the thread in which the chess engine will run
         chessEngineWorker.current = new ChessEngineWorker();
         chessEngineWorker.current.onmessage = handleWorkerMessage;
         chessEngineWorker.current.postMessage({type:'init'});
+
+        function handleWorkerMessage(e) {
+            // debugger;
+            console.log(e.data);
+            switch(e.data.type) {
+                case 'search':{
+                    // AI's move                    
+                    chessEngineWorker.current.postMessage({type: 'move', data: e.data.data.move});
+                    // debugger;
+                    const fromSquare = findFromSquare(game.current.board(), e.data.data.move, game.current.turn());
+                    const toSquare = findToSquare(e.data.data.move);
+                    const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
+                    const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
+                    console.log(from, to);
+                    game.current.move(e.data.data.move);
+                    setHistory(history => [...history, {move: e.data.data.move, from, to}]);
+                    setNeedToPlayMoveSound(true);
+                    break;
+                }
+                case 'hint':{
+                    // Hint from AI
+                    if(!waitingForHintRef.current) return;
+                    const fromSquare = findFromSquare(game.current.board(), e.data.data.move, game.current.turn());
+                    const toSquare = findToSquare(e.data.data.move);
+                    const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
+                    const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
+                    setHint({from, to});
+                    setWaitingForHint(false);                
+                    break;
+                }
+                default: 
+                    console.log("Unhandled message from worker", e.data);
+                    break;
+            }
+        }
 
         return function cleanup() {
 			// Delete the thread in which the chess engine ran
@@ -73,7 +121,8 @@ function HumanVsEngine() {
             moveAudio.current.play(); 
             setNeedToPlayMoveSound(false);
         }
-    }, [needToPlayMoveSound])
+    }, [needToPlayMoveSound]);
+
 
     useEffect(() => {
         setWaitingForHint(false);
@@ -87,16 +136,9 @@ function HumanVsEngine() {
 		// Let AI make the move if it is its turn
         if(game.current.turn() !== playerColor) letAiMakeMove();
 
-        function letAiMakeMove() {
-            const searchData = {
-                searchDepth,
-                evalCap,
-                maxPly: maxDepth
-            }
-            setTimeout(() => chessEngineWorker.current.postMessage({type: 'search', data: searchData}), 250);
-        }
+    }, [playerColor, history, letAiMakeMove]);    
 
-    }, [playerColor, history]);    
+    
 
     function undoGame() {
         if(game.current.turn() !== playerColor) return; // Disable undo while AI is thinking
@@ -144,39 +186,7 @@ function HumanVsEngine() {
         switchAudio.current.play();
     }
 
-    function handleWorkerMessage(e) {
-        // debugger;
-        console.log(e.data);
-        switch(e.data.type) {
-            case 'search':{
-                // AI's move
-                
-                chessEngineWorker.current.postMessage({type: 'move', data: e.data.data.move});
-                const fromSquare = findFromSquare(game.current.board(), e.data.data.move, game.current.turn());
-                const toSquare = findToSquare(e.data.data.move);
-                const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
-                const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
-                game.current.move(e.data.data.move);
-                setHistory(history => [...history, {move: e.data.data.move, from, to}]);
-                setNeedToPlayMoveSound(true);
-                // moveAudio.current.play();
-            }
-            case 'hint':{
-                // Hint from AI
-                if(!waitingForHintRef.current) return;
-                const fromSquare = findFromSquare(game.current.board(), e.data.data.move, game.current.turn());
-                const toSquare = findToSquare(e.data.data.move);
-                const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
-                const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
-                setHint({from, to});
-                setWaitingForHint(false);                
-				break;
-				}
-			default: 
-				console.log("Unhandled message from worker", e.data);
-				break;
-        }
-    }
+    
 
     function updateGameState(newMove) {
         console.log(newMove);
@@ -186,6 +196,8 @@ function HumanVsEngine() {
         setHistory(history => [...history, newMove]);
         chessEngineWorker.current.postMessage({type: 'move', data: newMove.move});
     }
+
+    const onHintShown = useCallback(() => {setHint({})}, []);
 
 	return (
         <div className="game">
@@ -227,7 +239,7 @@ function HumanVsEngine() {
                         onMove = {updateGameState}
                         orientation = {playerColor === 'w' ? 'white' : 'black'}
                         hint = {hint}
-                        onHintShown = {() => setHint({})}
+                        onHintShown = {onHintShown}
                         dimensionAdjustment = {{
                             width: {percent: 4},
                             height: {pixel: 84}

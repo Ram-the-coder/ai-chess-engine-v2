@@ -16,7 +16,7 @@ export default class HistoryHeuristic {
 		let piece = getPieceTableIndex(move, turn);
 		let toSquare;
 		if(piece < 12)
-			toSquare = findToSquare(move);
+			toSquare = findToSquare(move, turn);
 		else
 			toSquare = {i:0, j:0};
 
@@ -29,7 +29,7 @@ export default class HistoryHeuristic {
 			let piece = getPieceTableIndex(move, turn);
 			let toSquare;
 			if(piece < 12)
-				toSquare = findToSquare(move);
+				toSquare = findToSquare(move, turn);
 			else
 				toSquare = {i:0, j:0};
 

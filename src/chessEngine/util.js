@@ -164,7 +164,10 @@ export function isCapture(move) {
     return move.search(/x/) !== -1;
 }
 
-export function findToSquare(move) {
+export function findToSquare(move, turn) {
+  // debugger;
+  if(move.search('O-O') !== -1) return turn === 'w' ? {i: 7, j: 6} : {i: 0, j: 6};
+  if(move.search('O-O-O') !== -1) return turn === 'w' ? {i: 7, j: 2} : {i: 0, j: 2};
   let startInd = move.search(/[a-h][1-8]/);
   if(startInd === -1) 
     return null; //castling
@@ -206,7 +209,15 @@ export function isCastling(move) {
 
 
 export function findFromSquare(board, move, turn) {
-  let startInd = move.search(/[a-h][1-8]/);
+  if(move.search(/(O-O)|(O-O-O)/) !== -1) return turn === 'w' ? {i: 7, j:4} : {i: 0, j:4};
+  let startInd = move.search(/=/);
+  if(startInd !== -1) {
+    // If it is a promotion move
+    const j = move.charCodeAt(0) - 'a'.charCodeAt(0);
+    const i = turn === 'w' ? 1 : 6;
+    return {i, j};
+  }
+  startInd = move.search(/[a-h][1-8]/);
   const toSquare = getCoords(move.slice(startInd, startInd+2));
   startInd = move.search(/[a-h]x?[a-h][1-8]/);
   const sameRow = startInd !== -1 ? (move.slice(startInd, startInd+1).charCodeAt(0) - 'a'.charCodeAt(0)) : -1;

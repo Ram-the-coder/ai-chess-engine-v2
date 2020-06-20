@@ -69,11 +69,25 @@
 }
 
 .controls > * {
-    margin: 5px;
+    margin: 3px;
 }
 
 .controls-half-width {
-    width: 45%;
+    /* width: 45%; */
+    flex: 1 1 45%;
+}
+
+.occupy-width {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.occupy-width > * {
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin: 1px;
 }
 
 .sidebar {
@@ -116,6 +130,10 @@
 .hr {
     width: 100%;
     margin: 5px;
+}
+
+.analysis-area > div {
+    margin: 0px 5px;
 }
 
 @media only screen and (max-width: 900px) {

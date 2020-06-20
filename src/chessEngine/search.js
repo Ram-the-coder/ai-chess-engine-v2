@@ -36,10 +36,9 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 
 			const bestStats = miniMax(-Infinity, Infinity, currentDepth, game, hash, 0);
 			bestScore = bestStats.val;
-			// console.log()
-			// pvMoves = pvtable.getPvLine(game, hash, currentDepth);
 			bestMove = hashTable.probePvMove(hash);
 			pvLine = hashTable.probePvLine(game, hash);
+			// pvLine = pvLine.slice(0, currentDepth);
 			// console.log({perf: fhf/fh, currentDepth, bestScore, bestMove, nodesEvaluated, detail: bestStats.detail});
 		}
 

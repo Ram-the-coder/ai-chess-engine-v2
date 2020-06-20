@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import Modal from './Modal';
 
 const MIN_SEARCH_DEPTH = 1;
-const MIN_MAX_DEPTH = 1;
+// const MIN_MAX_DEPTH = 1;
 const MAX_SEARCH_DEPTH = 10;
 const MAX_MAX_DEPTH = 10;
 const MIN_EVAL_CAP = 5000;
@@ -75,7 +75,7 @@ export default function SettingsModal({searchDepth, setSearchDepth, maxDepth, se
                     <input 
                         type="number" 
                         id="mdepth"
-                        min={MIN_MAX_DEPTH} max={MAX_MAX_DEPTH} 
+                        min={curSearchDepth} max={MAX_MAX_DEPTH} 
                         className="form-control col-sm-4"
                         value = {curMaxDepth}
                         onChange = {handleMaxDepthChange}

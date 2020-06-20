@@ -4,7 +4,7 @@ import chessPieces from './chessPieces';
 import {isPromotion} from '../../chessEngine/util';
 import './ChessBoard.css';
 
-function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHintShown, dimensionAdjustment}) {
+function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHintShown, dimensionAdjustment, id}) {
 
 	/********** States and Refs **********/
 	const [fen, setFen] = useState('start'); // Used to set/update the board position
@@ -14,6 +14,7 @@ function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHi
 	const [isModalOpen, setModalState] = useState(false); // Piece Promotion Modal
 	const promo_move_cfg = useRef({}); // Used to store the move_cfg between making a promotion move 
 	// and selecting a piece to promote to
+	const [undoMove, setUndoMove] = useState(false);
 
 
 	/********** Effects **********/
@@ -21,8 +22,9 @@ function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHi
 	// or to render style changes like selectedSquare, squaresToHighlight and hint
 	useLayoutEffect(() => {
 		setFen(game.fen());
+		setUndoMove(true);
 		let newSquareStyles = highlightSquareStyles(squaresToHighlight, history, selectedSquare);
-		if(JSON.stringify(hint) !== "{}") {
+		if(hint && JSON.stringify(hint) !== "{}") {
 			newSquareStyles[hint.from] = {
 				animation: "from-square 1.5s ease-in-out"
 			}
@@ -128,10 +130,12 @@ function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHi
 		let move = game.move(move_cfg);
 		if(move === null) return;
 		setselectedSquare('');
+		setSquaresToHighlight([]);
+		setUndoMove(false);
 		let newMove = {move: game.history()[game.history().length - 1], 
 			from: move_cfg.from,
 			to: move_cfg.to};
-		onMove(newMove);
+		onMove(newMove, history.length);
 	}
 
 	function setPromotion(piece) {
@@ -145,6 +149,7 @@ function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHi
 			to: promo_move_cfg.current.to};
 		onMove(newMove);
 		setModalState(false);
+		setUndoMove(false);
 	}
 
 	function allowDrag({piece}) {
@@ -154,16 +159,16 @@ function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHi
 	function calcWidth({screenHeight, screenWidth}) {
 		if(!screenHeight || !screenWidth) return 560;
 		let xadjust = 0, yadjust = 0;
-		if(dimensionAdjustment.width.percent)
+		if(dimensionAdjustment && dimensionAdjustment.width.percent)
 			xadjust += (screenWidth * dimensionAdjustment.width.percent) / 100;
 
-		if(dimensionAdjustment.width.pixel)
+		if(dimensionAdjustment && dimensionAdjustment.width.pixel)
 			xadjust += dimensionAdjustment.width.pixel;
 
-		if(dimensionAdjustment.height.percent)
+		if(dimensionAdjustment && dimensionAdjustment.height.percent)
 			yadjust += (screenHeight * dimensionAdjustment.height.percent) / 100;
 
-		if(dimensionAdjustment.height.pixel)
+		if(dimensionAdjustment && dimensionAdjustment.height.pixel)
 			yadjust += dimensionAdjustment.height.pixel;
 
 		const availWidth = screenWidth - xadjust;
@@ -178,6 +183,7 @@ function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHi
 	return (
 		<div className="myChessboard">
 			<Chessboard 
+				id={id}
 				position={fen}
 				orientation={orientation}
 				onMouseOutSquare = {onMouseOutSquare}
@@ -188,6 +194,7 @@ function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHi
 				allowDrag = {allowDrag}
 				calcWidth = {calcWidth}
 				transitionDuration = {150}
+				undo={undoMove}
 			/>
 			{
 				isModalOpen &&

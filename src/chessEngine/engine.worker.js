@@ -27,6 +27,11 @@ self.addEventListener('message', e => {
             // console.log(game.ascii());
             break;        
 
+        case 'set-pgn':
+            game.load_pgn(e.data.data);
+            // console.log(game.ascii());
+            break;
+
         case 'reset':
             resetGame(e.data.startPosition);
             break;

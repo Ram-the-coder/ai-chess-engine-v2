@@ -148,8 +148,9 @@ export default class HashTable {
 			pvMove = this.probePvMove(zobristKey);
 			if(pvMove === null) break;
 			pvLine.push(pvMove);
-			zobristKey = recomputeZobristHash(zobristKey, game.board(), pvMove, game.turn());
-			game.move(pvMove);
+			const board = game.board(), turn = game.turn();
+			if(game.move(pvMove) === null) break;
+			zobristKey = recomputeZobristHash(zobristKey, board, pvMove, turn);
 			++count;
 		}
 

@@ -13,7 +13,7 @@ import NewGameSound from '../../assets/NewGame.mp3';
 import UndoSound from '../../assets/Undo.mp3';
 import SwitchSound from '../../assets/Switch.mp3';
 
-import './HumanVsEngine.css';
+import './Game.css';
 
 
 function HumanVsEngine() {
@@ -72,7 +72,7 @@ function HumanVsEngine() {
                 searchDepth,
                 evalCap,
                 maxPly: maxDepth
-            }
+            };
             setTimeout(() => chessEngineWorker.current.postMessage({type: 'search', data: searchData}), 250);
         }, 
         [searchDepth, evalCap, maxDepth]
@@ -247,6 +247,7 @@ function HumanVsEngine() {
                 <PlayerInfo name="AI" isThinking={(gameoverStatus === 0) && (game.current.turn() !== playerColor)} thinkingText="AI is Thinking..." />
                 <div className="chessboard-wrapper">
                     <ChessBoard 
+                        id="vsAI"
                         game = {game.current}
                         history = {history}
                         playerColor = {playerColor}

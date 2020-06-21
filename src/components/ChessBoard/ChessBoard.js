@@ -21,8 +21,10 @@ function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHi
 	// Fires to update the board on change of game history
 	// or to render style changes like selectedSquare, squaresToHighlight and hint
 	useLayoutEffect(() => {
-		setFen(game.fen());
-		setUndoMove(true);
+		if(game.fen() !== fen) {
+			setFen(game.fen());
+			setUndoMove(true);
+		}
 		let newSquareStyles = highlightSquareStyles(squaresToHighlight, history, selectedSquare);
 		if(hint && JSON.stringify(hint) !== "{}") {
 			newSquareStyles[hint.from] = {
@@ -132,6 +134,7 @@ function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHi
 		setselectedSquare('');
 		setSquaresToHighlight([]);
 		setUndoMove(false);
+		setFen(game.fen());
 		let newMove = {move: game.history()[game.history().length - 1], 
 			from: move_cfg.from,
 			to: move_cfg.to};
@@ -148,6 +151,7 @@ function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHi
 			from: promo_move_cfg.current.from,
 			to: promo_move_cfg.current.to};
 		onMove(newMove);
+		setFen(game.fen());
 		setModalState(false);
 		setUndoMove(false);
 	}

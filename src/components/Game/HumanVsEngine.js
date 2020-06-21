@@ -172,6 +172,7 @@ function HumanVsEngine() {
     }
 
     function newGame() {
+        if(gameoverStatus === 0 && !window.confirm("Are you sure that you want to reset the board?")) return;
 		game.current = new Chess();
 		chessEngineWorker.current.postMessage({type: 'reset'});
         setHistory([]);

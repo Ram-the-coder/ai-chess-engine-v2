@@ -42,7 +42,7 @@ export default function Analysis() {
     const [history, setHistory] = useState([]); // Used as state -> condition on which to re-render on move
     const [currentPosition, setCurPosition] = useState(-1);
     const [orientation, setOrientation] = useState('w');
-    const [analysisResult, setAnalysisResult] = useState({});
+    const [analysisResult, setAnalysisResult] = useState(null);
     const [waitingForAnalysisResult, _setWaitingForAnalysisResult] = useState(false);
     const waitingForAnalysisResultRef = useRef(false); // To be used in worker message handler
     const setWaitingForAnalysisResult = (state) => {
@@ -99,6 +99,16 @@ export default function Analysis() {
         setOrientation(orientation => orientation === 'w' ? 'b' : 'w');
     }
 
+    function reset() {
+        if(!window.confirm("Are you sure that you want to reset the board?")) return;
+        game.current = new Chess();
+        chessEngineWorker.current.postMessage({type: 'reset'});
+        setHistory([]);
+        setWaitingForAnalysisResult(false);
+        setCurPosition(-1);
+        setAnalysisResult(null);
+    }
+
     function analyze() {
         const searchData = {
             searchDepth,
@@ -110,12 +120,11 @@ export default function Analysis() {
     }
 
     function getBestMove() {
-        if(!(JSON.stringify(analysisResult !== '{}') && analysisResult.bestMove)) return "";
-        return analysisResult.bestMove;
+        return (analysisResult && analysisResult.bestMove) ? analysisResult.bestMove : "";
     }
 
     function getPvLine() {
-        if(!(JSON.stringify(analysisResult) !== '{}' && analysisResult.pvLine && analysisResult.pvLine.length)) return "";
+        if(!(analysisResult && analysisResult.pvLine && analysisResult.pvLine.length)) return "";
         let pvLine = analysisResult && analysisResult.pvLine && analysisResult.pvLine.reduce((pvl, pvMove) => pvl += `${pvMove} `, '');
         return pvLine;
     }
@@ -262,12 +271,12 @@ export default function Analysis() {
             <div className="sidebar">
                 <div className="controls">
                     <button type="button" className="btn btn-dark controls-half-width" onClick={flipBoard}>Flip Board</button>
-                    <button type="button" className="btn btn-dark btn-block controls-half-width" onClick={() => setOpenSettings(true)}>AI Settings</button>
-                    <div className="occupy-width">
-                        <button type="button" className="btn btn-dark" onClick={analyze} disabled={waitingForAnalysisResult}>
-                            {waitingForAnalysisResult ? 'Analyzing...' : 'Analyze Position'}
-                        </button>
-                    </div>
+                    <button type="button" className="btn btn-dark controls-half-width" onClick={() => setOpenSettings(true)}>AI Settings</button>
+                    <button type="button" className="btn btn-dark btn-block" onClick={reset}>Reset Board</button>
+                    <button type="button" className="btn btn-dark btn-block" onClick={analyze} disabled={waitingForAnalysisResult}>
+                        {waitingForAnalysisResult ? 'Analyzing...' : 'Analyze Position'}
+                    </button>
+                    
                     <hr className='hr' />
                 </div>
 				<div className="text-center">

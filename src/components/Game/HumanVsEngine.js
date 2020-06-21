@@ -35,16 +35,31 @@ function HumanVsEngine() {
 
     // Save any changes to AI settings to localstorage
     const setSearchDepth = (newDepth) => {
+        if(searchDepth < newDepth) {
+            chessEngineWorker.current.postMessage({type: 'init'});
+            const pgn = game.current.pgn();
+            chessEngineWorker.current.postMessage({type: 'set-pgn', data: pgn});
+        }
         _setSearchDepth(newDepth);
         localStorage.setItem('searchDepth', newDepth);
     }
 
     const setMaxDepth = (newDepth) => {
+        if(maxDepth < newDepth) {
+            chessEngineWorker.current.postMessage({type: 'init'});
+            const pgn = game.current.pgn(); 
+            chessEngineWorker.current.postMessage({type: 'set-pgn', data: pgn});
+        }
         _setMaxDepth(newDepth);
         localStorage.setItem('maxDepth', newDepth);
     }
 
     const setEvalCap = (newCap) => {
+        if(evalCap < newCap) {
+            chessEngineWorker.current.postMessage({type: 'init'});
+            const pgn = game.current.pgn();
+            chessEngineWorker.current.postMessage({type: 'set-pgn', data: pgn});
+        }
         _setEvalCap(newCap);
         localStorage.setItem('evalCap', newCap);
     }

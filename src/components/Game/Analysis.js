@@ -57,6 +57,8 @@ export default function Analysis() {
     const [openSettings, setOpenSettings] = useState(false); // State of AI settings modal
     const [positionModal, setPositionModal] = useState(null);
 
+    const moveAudio = useRef(null);
+
     /********** Effects **********/
 
     useEffect(() => {
@@ -97,6 +99,7 @@ export default function Analysis() {
         setCurPosition(oldHistoryLength);
         setHistory(history => [...(history.slice(0, oldHistoryLength)), newMove]);
         chessEngineWorker.current.postMessage({type: 'set-pgn', data: game.current.pgn()});
+        moveAudio.current.play()
     }
 
     function flipBoard() {
@@ -111,6 +114,7 @@ export default function Analysis() {
         setWaitingForAnalysisResult(false);
         setCurPosition(-1);
         setAnalysisResult(null);
+        moveAudio.current.play()
     }
 
     function analyze() {
@@ -148,23 +152,31 @@ export default function Analysis() {
     function handleGoToStart() { 
         rewindGame(-1);
         setCurPosition(-1); 
+        chessEngineWorker.current.postMessage({type: 'reset'});
+        moveAudio.current.play()
     }
 
     function handleGoToPrev() { 
         if(currentPosition < 0) return;
         rewindGame(currentPosition-1);
         setCurPosition(curPos => curPos-1);
+        chessEngineWorker.current.postMessage({type: 'undo'});
+        moveAudio.current.play()
     }
 
     function handleGoToNext() {
         if(currentPosition >= history.length-1) return;
         fastForwardGame(currentPosition+1);
+        chessEngineWorker.current.postMessage({type: 'move', data: history[currentPosition+1].move});
         setCurPosition(curPos => curPos+1);
+        moveAudio.current.play()
     }
 
     function handleGoToEnd() {
         fastForwardGame(history.length-1);
         setCurPosition(history.length-1);
+        chessEngineWorker.current.postMessage({type: 'set-pgn', data: game.current.pgn()});
+        moveAudio.current.play()
     }
 
     function handleClickLoadPgn() {
@@ -219,6 +231,7 @@ export default function Analysis() {
             setCurPosition(newHistory.length-1);
             setWaitingForAnalysisResult(false);
             chessEngineWorker.current.postMessage({type: 'set-pgn', data: pgn});
+            moveAudio.current.play()
         }
         return success;
     }
@@ -230,6 +243,7 @@ export default function Analysis() {
             setCurPosition(-1);
             setWaitingForAnalysisResult(false);
             chessEngineWorker.current.postMessage({type: 'set-fen', data: fen});
+            moveAudio.current.play()
         }
         return success;
     }
@@ -300,12 +314,13 @@ export default function Analysis() {
                         <button type="button" className="btn btn-dark" disabled={currentPosition === history.length-1} onClick={handleGoToNext}>&gt;</button>
                         <button type="button" className="btn btn-dark" disabled={currentPosition === history.length-1} onClick={handleGoToEnd}>&gt;&gt;</button>
                     </div>
-                    <button type="button" className="btn btn-dark controls-half-width" onClick={handleClickLoadPgn} disabled={history.length === 0} >Load PGN</button>
+                    <button type="button" className="btn btn-dark controls-half-width" onClick={handleClickLoadPgn}>Load PGN</button>
                     <button type="button" className="btn btn-dark controls-half-width" onClick={handleClickGetPgn} disabled={history.length === 0}>Get PGN</button>
-                    <button type="button" className="btn btn-dark controls-half-width" onClick={handleClickLoadFen} disabled={history.length === 0}>Load FEN</button>
+                    <button type="button" className="btn btn-dark controls-half-width" onClick={handleClickLoadFen}>Load FEN</button>
                     <button type="button" className="btn btn-dark controls-half-width" onClick={handleClickGetFen} disabled={history.length === 0}>Get FEN</button>
                 </div>
             </div>
+            <audio ref={moveAudio} src={MoveSound} />
         </div>
     );
 }

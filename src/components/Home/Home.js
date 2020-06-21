@@ -1,6 +1,7 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
-import GithubLogo from '../../assets/github-logo-2.png'
+import GithubLogo from '../../assets/github-logo-2.png';
+import faChess from '../Loader/fa-chess.js';
 
 
 import './Home.css';
@@ -22,9 +23,15 @@ export default function Home() {
                     <span>Github Repo</span>
                 </a>
                 
-                <Link to="/ai" className="btn btn-success">Play vs AI</Link>
+                <Link to="/ai" className="btn btn-success">
+                    <svg height="30" viewBox="0 0 32 32" style={{marginRight: "2px"}}><g>{faChess.knight}</g></svg>
+                    Play vs AI
+                </Link>
 
-                <Link to="/analysis" className="btn btn-dark">Analysis Board</Link>
+                <Link to="/analysis" className="btn btn-dark">
+                    <svg width="32" viewBox="0 0 32 32"><g>{faChess.search}</g></svg>
+                    Analysis Board
+                </Link>
             </div>
         </div>
     );

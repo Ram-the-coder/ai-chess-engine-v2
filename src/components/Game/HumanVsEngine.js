@@ -29,16 +29,33 @@ function HumanVsEngine() {
     // to initialize more than once - in result creating more than one worker thread
 
     
-    const [searchDepth, setSearchDepth] = useState(3); // Search engine-related state
-    const [maxDepth, setMaxDepth] = useState(3); // Search engine-related state
-    const [evalCap, setEvalCap] = useState(15000); // Search engine-related state
+    const [searchDepth, _setSearchDepth] = useState(localStorage.getItem('searchDepth') || 3); // Search engine-related state
+    const [maxDepth, _setMaxDepth] = useState(localStorage.getItem('maxDepth') || 3); // Search engine-related state
+    const [evalCap, _setEvalCap] = useState(localStorage.getItem('evalCap') || 15000); // Search engine-related state
+
+    // Save any changes to AI settings to localstorage
+    const setSearchDepth = (newDepth) => {
+        _setSearchDepth(newDepth);
+        localStorage.setItem('searchDepth', newDepth);
+    }
+
+    const setMaxDepth = (newDepth) => {
+        _setMaxDepth(newDepth);
+        localStorage.setItem('maxDepth', newDepth);
+    }
+
+    const setEvalCap = (newCap) => {
+        _setEvalCap(newCap);
+        localStorage.setItem('evalCap', newCap);
+    }
 
     const [history, setHistory] = useState([]); // Used as state -> condition on which to re-render on move
 
-    const [playerColor, _setPlayerColor] = useState('w'); // Used to check whose turn it is (AI's or human's) and to set board orientation
+    const [playerColor, _setPlayerColor] = useState(localStorage.getItem('orientation') || 'w'); // Used to check whose turn it is (AI's or human's) and to set board orientation
     const playerColorRef = useRef('w'); // Used to access player color info in on message event handler
 	const setPlayerColor = (newColor) => {
-		playerColorRef.current = newColor;
+        playerColorRef.current = newColor;
+        localStorage.setItem('orientation', newColor);
 		_setPlayerColor(newColor);
     }
 

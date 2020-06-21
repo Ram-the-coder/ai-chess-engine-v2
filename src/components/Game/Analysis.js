@@ -41,7 +41,11 @@ export default function Analysis() {
 
     const [history, setHistory] = useState([]); // Used as state -> condition on which to re-render on move
     const [currentPosition, setCurPosition] = useState(-1);
-    const [orientation, setOrientation] = useState('w');
+    const [orientation, _setOrientation] = useState(localStorage.getItem('orientation') || 'w');
+    const setOrientation = (newOrientation) => {
+        localStorage.setItem('orientation', newOrientation);
+        _setOrientation(newOrientation);
+    }
     const [analysisResult, setAnalysisResult] = useState(null);
     const [waitingForAnalysisResult, _setWaitingForAnalysisResult] = useState(false);
     const waitingForAnalysisResultRef = useRef(false); // To be used in worker message handler

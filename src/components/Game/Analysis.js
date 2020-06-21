@@ -19,9 +19,9 @@ export default function Analysis() {
     const game = useRef(new Chess());
     const chessEngineWorker = useRef();
 
-    const [searchDepth, _setSearchDepth] = useState(localStorage.getItem('searchDepth') || 3); // Search engine-related state
-    const [maxDepth, _setMaxDepth] = useState(localStorage.getItem('maxDepth') || 3); // Search engine-related state
-    const [evalCap, _setEvalCap] = useState(localStorage.getItem('evalCap') || 15000); // Search engine-related state
+    const [searchDepth, _setSearchDepth] = useState(parseInt(localStorage.getItem('searchDepth')) || 3); // Search engine-related state
+    const [maxDepth, _setMaxDepth] = useState(parseInt(localStorage.getItem('maxDepth')) || 3); // Search engine-related state
+    const [evalCap, _setEvalCap] = useState(parseInt(localStorage.getItem('evalCap')) || 15000); // Search engine-related state
 
     // Save any changes to AI settings to localstorage
     const setSearchDepth = (newDepth) => {
@@ -75,6 +75,7 @@ export default function Analysis() {
         _setWaitingForAnalysisResult(state);
     }
 
+    const [searchProgress, setSearchProgress] = useState(0);
     const [openSettings, setOpenSettings] = useState(false); // State of AI settings modal
     const [positionModal, setPositionModal] = useState(null);
 
@@ -89,7 +90,7 @@ export default function Analysis() {
         chessEngineWorker.current.postMessage({type:'init'});
 
         function handleWorkerMessage(e) {
-            console.log(e.data);
+            // console.log(e.data);
             switch(e.data.type) {
                 case 'search':{
                     if(!waitingForAnalysisResultRef.current) return;
@@ -98,6 +99,12 @@ export default function Analysis() {
                         pvLine: e.data.data.pvLine
                     });
                     setWaitingForAnalysisResult(false);
+                    setSearchProgress(0);
+                    break;
+                }
+                case 'search-update': {
+                    const curDepth = e.data.data.currentDepth;
+                    setSearchProgress(Math.floor((sumTillN(curDepth) * 100) / sumTillN(e.data.data.searchDepth)));
                     break;
                 }
                 default: 
@@ -313,7 +320,7 @@ export default function Analysis() {
                     <button type="button" className="btn btn-dark controls-half-width" onClick={() => setOpenSettings(true)}>AI Settings</button>
                     <button type="button" className="btn btn-dark btn-block" onClick={reset}>Reset Board</button>
                     <button type="button" className="btn btn-dark btn-block" onClick={analyze} disabled={waitingForAnalysisResult}>
-                        {waitingForAnalysisResult ? 'Analyzing...' : 'Analyze Position'}
+                        {waitingForAnalysisResult ? `Analyzing...(${searchProgress}%)` : 'Analyze Position'}
                     </button>
                     
                     <hr className='hr' />
@@ -323,8 +330,8 @@ export default function Analysis() {
                     <hr className='hr' />
                 </div>
                 <div className="analysis-area">
-                    <div><span className="sidebar-heading">Best Move:</span>{` ${getBestMove()}`}</div>
-                    <div><span className="sidebar-heading">Principal Variation:</span>{` ${getPvLine()}`}</div>
+                    <div><span className="sidebar-heading">Best Move:</span><span className="analysis-res">{` ${getBestMove()}`}</span></div>
+                    <div><span className="sidebar-heading">Principal Variation:</span><span className="analysis-res">{` ${getPvLine()}`}</span></div>
                     <hr className='hr' />
                 </div>
                 <MoveHistory history={history} currentPosition={currentPosition} />
@@ -344,4 +351,8 @@ export default function Analysis() {
             <audio ref={moveAudio} src={MoveSound} />
         </div>
     );
+}
+
+function sumTillN(n) {
+    return (n*(n+1))/2;
 }

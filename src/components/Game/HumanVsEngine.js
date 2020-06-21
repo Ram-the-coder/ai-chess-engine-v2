@@ -29,9 +29,9 @@ function HumanVsEngine() {
     // to initialize more than once - in result creating more than one worker thread
 
     
-    const [searchDepth, _setSearchDepth] = useState(localStorage.getItem('searchDepth') || 3); // Search engine-related state
-    const [maxDepth, _setMaxDepth] = useState(localStorage.getItem('maxDepth') || 3); // Search engine-related state
-    const [evalCap, _setEvalCap] = useState(localStorage.getItem('evalCap') || 15000); // Search engine-related state
+    const [searchDepth, _setSearchDepth] = useState(parseInt(localStorage.getItem('searchDepth')) || 3); // Search engine-related state
+    const [maxDepth, _setMaxDepth] = useState(parseInt(localStorage.getItem('maxDepth')) || 3); // Search engine-related state
+    const [evalCap, _setEvalCap] = useState(parseInt(localStorage.getItem('evalCap')) || 15000); // Search engine-related state
 
     // Save any changes to AI settings to localstorage
     const setSearchDepth = (newDepth) => {
@@ -74,6 +74,7 @@ function HumanVsEngine() {
 		_setPlayerColor(newColor);
     }
 
+    const [searchProgress, setSearchProgress] = useState(0);
     const [hint, setHint] = useState({});
     const [waitingForHint, _setWaitingForHint] = useState(false);
 
@@ -132,6 +133,7 @@ function HumanVsEngine() {
                     game.current.move(e.data.data.move);
                     setHistory(history => [...history, {move: e.data.data.move, from, to}]);
                     setNeedToPlayMoveSound(true);
+                    setSearchProgress(0);
                     break;
                 }
                 case 'hint':{
@@ -143,8 +145,15 @@ function HumanVsEngine() {
                     const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
                     setHint({from, to});
                     setWaitingForHint(false);                
+                    setSearchProgress(0);
                     break;
                 }
+                case 'search-update': {
+                    const curDepth = e.data.data.currentDepth;
+                    setSearchProgress(Math.floor((sumTillN(curDepth) * 100) / sumTillN(e.data.data.searchDepth)));
+                    break;
+                }
+
                 default: 
                     console.log("Unhandled message from worker", e.data);
                     break;
@@ -278,7 +287,7 @@ function HumanVsEngine() {
                 />
             }
             <div className="bounding-box">
-                <PlayerInfo name="AI" isThinking={(gameoverStatus === 0) && (game.current.turn() !== playerColor)} thinkingText="AI is Thinking..." />
+                <PlayerInfo name="AI" isThinking={(gameoverStatus === 0) && (game.current.turn() !== playerColor)} thinkingText={`AI is Thinking...(${searchProgress}%)`} />
                 <div className="chessboard-wrapper">
                     <ChessBoard 
                         id="vsAI"
@@ -309,7 +318,7 @@ function HumanVsEngine() {
                             onClick={() => showHint()} 
                             disabled={(waitingForHint) || (gameoverStatus !== 0) || (game.current.turn() !== playerColor)}
                     >
-                            {!waitingForHint ? 'Hint' : 'Analyzing...' }
+                            {!waitingForHint ? 'Hint' : `Analyzing...(${searchProgress}%)` }
                     </button>
                     <button className="btn btn-dark controls-half-width"
                             onClick={() => switchSides()} 
@@ -364,6 +373,10 @@ function checkGameEnd(game) {
 		gameOver = false;
 	}
 	return {gameOver, status};
+}
+
+function sumTillN(n) {
+    return (n*(n+1))/2;
 }
 
 export default HumanVsEngine;

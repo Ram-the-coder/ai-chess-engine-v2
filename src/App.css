@@ -71,15 +71,16 @@ main {
 }
 
 .blink {
-	animation: blinking-text 2s infinite;
+	animation: blinking-text 2s infinite ease-in-out;
+	transform: translateZ(0);
 }
 
 @keyframes blinking-text {
-	0% {opacity: 0;}
+	0% {opacity: 0.5;}
 
 	50% {opacity: 1;}
 
-	100% {opacity: 0;}
+	100% {opacity: 0.5;}
 }
 
 footer {

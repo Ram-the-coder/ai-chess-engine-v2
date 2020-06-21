@@ -38,6 +38,7 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 			bestScore = bestStats.val;
 			bestMove = hashTable.probePvMove(hash);
 			pvLine = hashTable.probePvLine(game, hash);
+			self.postMessage({type: 'search-update', data: {currentDepth, bestMove, pvLine, searchDepth}});
 			// pvLine = pvLine.slice(0, currentDepth);
 			// console.log({perf: fhf/fh, currentDepth, bestScore, bestMove, nodesEvaluated, detail: bestStats.detail});
 		}
@@ -128,7 +129,7 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 		const probe = hashTable.probeHashEntry(hash, alpha, beta, depth);
 
 		if(probe.hit) {
-			console.log("hit");
+			// console.log("hit");
 			return {val: probe.val};
 		}
 

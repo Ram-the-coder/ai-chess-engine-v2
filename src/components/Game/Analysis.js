@@ -2,7 +2,7 @@ import React, {useState, useRef, useEffect} from 'react';
 import ChessBoard from '../ChessBoard/ChessBoard';
 import Chess from 'chess.js';
 import ChessEngineWorker from '../../chessEngine/engine.worker';
-import {calculatePointsByPiece, findFromSquare, findToSquare} from '../../chessEngine/util';
+import {calculatePointsByPiece} from '../../chessEngine/util';
 import SettingsModal from './Modals/SettingsModal';
 import PositionModal from './Modals/PositionModal';
 import PlayerInfo from './PlayerInfo';

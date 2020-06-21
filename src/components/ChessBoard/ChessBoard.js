@@ -42,7 +42,7 @@ function ChessBoard({game, history, playerColor, orientation, onMove, hint, onHi
 		}
 
 		setSquareStyles(newSquareStyles);
-	}, [history, selectedSquare, game, squaresToHighlight, hint, onHintShown]);
+	}, [history, selectedSquare, game, squaresToHighlight, hint, onHintShown, fen]);
 
 
 

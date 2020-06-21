@@ -307,7 +307,7 @@ function HumanVsEngine() {
                     <span className="sidebar-heading">{'Points balance: '}</span>{calculatePointsByPiece(game.current.board())}
                     <hr className='hr' />
                 </div>
-                <MoveHistory history={history} />
+                <MoveHistory history={history} currentPosition={history.length-1} />
                 <div className="controls">
                     <button className="btn btn-dark controls-half-width" onClick={() => setGetPosition({format: 'PGN'})} disabled = {history.length === 0}>Get PGN</button>
                     <button className="btn btn-dark controls-half-width" onClick={() => setGetPosition({format: 'FEN'})} disabled = {history.length === 0}>Get FEN</button>

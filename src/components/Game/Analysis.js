@@ -292,7 +292,7 @@ export default function Analysis() {
                     <div><span className="sidebar-heading">Principal Variation:</span>{` ${getPvLine()}`}</div>
                     <hr className='hr' />
                 </div>
-                <MoveHistory history={history} current={currentPosition} />
+                <MoveHistory history={history} currentPosition={currentPosition} />
                 <div className="controls">
                     <div className="occupy-width">
                         <button type="button" className="btn btn-dark" disabled={currentPosition === -1} onClick={handleGoToStart}>&lt;&lt;</button>

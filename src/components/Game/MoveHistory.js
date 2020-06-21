@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 
-export default function MoveHistory({history}) {
+export default function MoveHistory({history, currentPosition}) {
     const [jsx, setJsx] = useState([]);
 
     useEffect(() => {
@@ -11,8 +11,8 @@ export default function MoveHistory({history}) {
             newJsx.push(
                 <div className={`row ${odd ? 'my-bg-light' : 'my-bg-dark'}`} key={key}>
                     <span className="col-2">{`${Math.ceil(i/2)}. `}</span>
-                    <div className="col-5">{history[i-1].move}</div>
-                    <div className="col-5">{history[i].move}</div>
+                    <div className={`col-5 ${(currentPosition === i-1) ? "current-position" : ""}`}>{history[i-1].move}</div>
+                    <div className={`col-5 ${(currentPosition === i) ? "current-position" : ""}`}>{history[i].move}</div>
                 </div>
             );
             odd = !odd;
@@ -23,14 +23,14 @@ export default function MoveHistory({history}) {
             newJsx.push(
                 <div className={`row ${odd ? 'my-bg-light' : 'my-bg-dark'}`} key={key}>
                     <span className="col-2">{`${Math.ceil(history.length/2)}. `}</span>
-                    <div className="col-5">{history[history.length-1].move}</div>
+                    <div className={`col-5 ${(currentPosition === history.length-1) ? "current-position" : ""}`}>{history[history.length-1].move}</div>
                 </div>
             );
         }
 
         setJsx(newJsx);
 
-    }, [history])
+    }, [history, currentPosition])
 
     return (
         <div className="moves">

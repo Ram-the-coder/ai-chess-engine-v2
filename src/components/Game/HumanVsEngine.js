@@ -5,7 +5,7 @@ import {calculatePointsByPiece, findFromSquare, findToSquare} from '../../chessE
 import MoveHistory from './MoveHistory';
 import SettingsModal from './Modals/SettingsModal';
 import GameoverModal from './Modals/GameoverModal';
-import PgnModal from './Modals/PgnModal';
+import PositionModal from './Modals/PositionModal';
 import PlayerInfo from './PlayerInfo';
 import ChessEngineWorker from '../../chessEngine/engine.worker';
 import MoveSound from '../../assets/Move.mp3';
@@ -56,7 +56,7 @@ function HumanVsEngine() {
 
 	const [openSettings, setOpenSettings] = useState(false); // State of AI settings modal
     const [openGameoverModal, setOpenGameoverModal ] = useState(false);
-    const [getPgnModal, setGetPgnModal] = useState(false); 
+    const [getPosition, setGetPosition] = useState(null); 
     
     const moveAudio = useRef(null);
     const newGameAudio = useRef(null);
@@ -237,10 +237,11 @@ function HumanVsEngine() {
                 />
             }
             {
-                getPgnModal &&
-                <PgnModal 
-                    pgn = {game.current.pgn()} 
-                    closeModal = {() => setGetPgnModal(false)}
+                getPosition &&
+                <PositionModal
+                    position = {getPosition.format === 'PGN' ? game.current.pgn() : game.current.fen()} 
+                    positionFormat = {getPosition.format}
+                    closeModal = {() => setGetPosition(null)}
                 />
             }
             <div className="bounding-box">
@@ -290,7 +291,8 @@ function HumanVsEngine() {
                 </div>
                 <MoveHistory history={history} />
                 <div className="controls">
-                    <button className="btn btn-dark btn-block" onClick={() => setGetPgnModal(true)} disabled = {history.length === 0}>Get PGN</button>
+                    <button className="btn btn-dark controls-half-width" onClick={() => setGetPosition({format: 'PGN'})} disabled = {history.length === 0}>Get PGN</button>
+                    <button className="btn btn-dark controls-half-width" onClick={() => setGetPosition({format: 'FEN'})} disabled = {history.length === 0}>Get FEN</button>
                 </div>
             </div>
             <audio ref={newGameAudio} src={NewGameSound} />

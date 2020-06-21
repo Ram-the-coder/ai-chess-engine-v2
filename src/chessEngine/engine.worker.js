@@ -32,6 +32,10 @@ self.addEventListener('message', e => {
             // console.log(game.ascii());
             break;
 
+        case 'set-fen':
+            game.load(e.data.data);
+            break;
+
         case 'reset':
             resetGame(e.data.startPosition);
             break;

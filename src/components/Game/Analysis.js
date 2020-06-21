@@ -4,6 +4,7 @@ import Chess from 'chess.js';
 import ChessEngineWorker from '../../chessEngine/engine.worker';
 import {calculatePointsByPiece, findFromSquare, findToSquare} from '../../chessEngine/util';
 import SettingsModal from './Modals/SettingsModal';
+import PositionModal from './Modals/PositionModal';
 import PlayerInfo from './PlayerInfo';
 import MoveHistory from './MoveHistory';
 
@@ -50,7 +51,7 @@ export default function Analysis() {
     }
 
     const [openSettings, setOpenSettings] = useState(false); // State of AI settings modal
-
+    const [positionModal, setPositionModal] = useState(null);
 
     /********** Effects **********/
 
@@ -123,7 +124,6 @@ export default function Analysis() {
         while(game.current.history().length - 1 > toHistoryIndex) {
             game.current.undo();
         }
-        console.log(game.current.history());
     }
 
     function fastForwardGame(toHistoryIndex) {
@@ -154,6 +154,73 @@ export default function Analysis() {
         setCurPosition(history.length-1);
     }
 
+    function handleClickLoadPgn() {
+        setPositionModal({
+            loadPosition: loadPGN,
+            positionFormat: 'PGN',
+            closeModal: () => setPositionModal(null)
+        });
+    }
+
+    function handleClickGetPgn() {
+        fastForwardGame(history.length-1);
+        const pgn = game.current.pgn();
+        rewindGame(currentPosition);
+        setPositionModal({
+            position: pgn,
+            positionFormat: 'PGN',
+            closeModal: () => setPositionModal(null)
+        });
+    }
+
+    function handleClickGetFen() {
+        fastForwardGame(history.length-1);
+        const fen = game.current.fen();
+        rewindGame(currentPosition);
+        setPositionModal({
+            position: fen,
+            positionFormat: 'FEN',
+            closeModal: () => setPositionModal(null)
+        });
+    }
+
+    function handleClickLoadFen() {
+        setPositionModal({
+            loadPosition: loadFEN,
+            positionFormat: 'FEN',
+            closeModal: () => setPositionModal(null)
+        });
+    }
+
+    function loadPGN(pgn) {
+        const success = game.current.load_pgn(pgn);
+        if(success) {
+            const moves = game.current.history();
+            const verbose = game.current.history({verbose: true});
+            const newHistory = moves.map((move, idx) => ({
+                move,
+                from: verbose[idx].from,
+                to: verbose[idx].to
+            }));
+            setHistory(newHistory);
+            setCurPosition(newHistory.length-1);
+            setWaitingForAnalysisResult(false);
+            chessEngineWorker.current.postMessage({type: 'set-pgn', data: pgn});
+        }
+        return success;
+    }
+
+    function loadFEN(fen) {
+        const success = game.current.load(fen);
+        if(success) {
+            setHistory([]);
+            setCurPosition(-1);
+            setWaitingForAnalysisResult(false);
+            chessEngineWorker.current.postMessage({type: 'set-fen', data: fen});
+        }
+        return success;
+    }
+
     /********** JSX **********/
 
     return (
@@ -169,6 +236,10 @@ export default function Analysis() {
                     setEvalCap = {setEvalCap}
                     setOpenSettings = {setOpenSettings}
                 />
+            }
+            {
+                positionModal &&
+                <PositionModal {...positionModal} />
             }
             <div className="bounding-box">
                 <PlayerInfo name={orientation === 'w' ? "Black" : "White"} />
@@ -216,10 +287,10 @@ export default function Analysis() {
                         <button type="button" className="btn btn-dark" disabled={currentPosition === history.length-1} onClick={handleGoToNext}>&gt;</button>
                         <button type="button" className="btn btn-dark" disabled={currentPosition === history.length-1} onClick={handleGoToEnd}>&gt;&gt;</button>
                     </div>
-                    <button type="button" className="btn btn-dark controls-half-width">Load PGN</button>
-                    <button type="button" className="btn btn-dark controls-half-width">Get PGN</button>
-                    <button type="button" className="btn btn-dark controls-half-width">Load FEN</button>
-                    <button type="button" className="btn btn-dark controls-half-width">Get FEN</button>
+                    <button type="button" className="btn btn-dark controls-half-width" onClick={handleClickLoadPgn} disabled={history.length === 0} >Load PGN</button>
+                    <button type="button" className="btn btn-dark controls-half-width" onClick={handleClickGetPgn} disabled={history.length === 0}>Get PGN</button>
+                    <button type="button" className="btn btn-dark controls-half-width" onClick={handleClickLoadFen} disabled={history.length === 0}>Load FEN</button>
+                    <button type="button" className="btn btn-dark controls-half-width" onClick={handleClickGetFen} disabled={history.length === 0}>Get FEN</button>
                 </div>
             </div>
         </div>

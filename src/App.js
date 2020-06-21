@@ -4,6 +4,8 @@ import {
 	Switch,
 	Route
 } from 'react-router-dom';
+import {ToastContainer} from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 
 import Loader from './components/Loader/Loader'
@@ -19,6 +21,7 @@ function App() {
 			<div className="App">
 				<Navbar />
 				<main>
+					<ToastContainer />
 					<Suspense fallback={<Loader />}>
 						<Switch>
 							<Route exact path="/" component={Home} />

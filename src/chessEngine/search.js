@@ -25,7 +25,7 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 
 	// console.log({EVAL_CAP, MAX_PLY});
 	startSearch(game);
-
+	// console.log({bestMove, bestScore});
 	return {bestMove, nodesEvaluated, pvLine};
 
 	function startSearch(game) {
@@ -120,7 +120,7 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 
 	function miniMax(alpha, beta, depth, game, hash, ply) {
 
-		if(nodesEvaluated++ >= EVAL_CAP || ply >= MAX_PLY) {
+		if(nodesEvaluated++ >= EVAL_CAP) {
 			const penalty = 1000;
 			// console.log("penalty", game.history());
 			return {val: (evalBoard(game.board()) + (game.turn() === 'w' ? penalty : -penalty))};
@@ -147,15 +147,9 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 		}
 
 		if(depth === 0) {
-			const val = quiescence(alpha, beta, game, hash, ply);
-			// const val = evalBoard(game.board());
+			const {val} = quiescence(alpha, beta, game, hash, ply);
 			return {val};
 		}
-
-		// if(ply >= MAX_PLY - 1) {
-		// 	const val = evalBoard(game.board());
-		// 	return {val};
-		// }
 
 		let possibleMoves = game.moves();
 		possibleMoves = orderMoves(possibleMoves, hash, game);
@@ -323,9 +317,12 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 
 	function quiescence(alpha, beta, game, hash, ply) {
 
-		if(nodesEvaluated++ >= EVAL_CAP  || ply >= MAX_PLY) {
+		if(ply >= MAX_PLY) {
+			return {val: (evalBoard(game.board()))};
+		}
+
+		if(nodesEvaluated++ >= EVAL_CAP) {
 			const penalty = 1000;
-			// console.log("penalty", game.history());
 			return {val: (evalBoard(game.board()) + (game.turn() === 'w' ? penalty : -penalty))};
 		}
 

@@ -147,7 +147,7 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 		}
 
 		if(depth === 0) {
-			const {val} = quiescence(alpha, beta, game, hash, ply);
+			const val = quiescence(alpha, beta, game, hash, ply);
 			return {val};
 		}
 
@@ -318,12 +318,12 @@ export function searchPosition(game, searchDepth, hashTable, masterAncient, eval
 	function quiescence(alpha, beta, game, hash, ply) {
 
 		if(ply >= MAX_PLY) {
-			return {val: (evalBoard(game.board()))};
+			return (evalBoard(game.board()));
 		}
 
 		if(nodesEvaluated++ >= EVAL_CAP) {
 			const penalty = 1000;
-			return {val: (evalBoard(game.board()) + (game.turn() === 'w' ? penalty : -penalty))};
+			return (evalBoard(game.board()) + (game.turn() === 'w' ? penalty : -penalty));
 		}
 
 		if(game.in_checkmate()) {

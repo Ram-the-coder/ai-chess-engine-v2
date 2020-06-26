@@ -173,7 +173,7 @@ export default function Analysis() {
 
     function fastForwardGame(toHistoryIndex) {
         while(game.current.history().length - 1 < toHistoryIndex) {
-            game.current.move(history[game.current.history().length]);
+            game.current.move(history[game.current.history().length].move);
         }
     }
 

@@ -1,8 +1,8 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, {useState, useRef, useEffect, useCallback} from 'react';
 import ChessBoard from '../ChessBoard/ChessBoard';
 import Chess from 'chess.js';
 import ChessEngineWorker from '../../chessEngine/engine.worker';
-import {calculatePointsByPiece} from '../../chessEngine/util';
+import {calculatePointsByPiece, findFromSquare, findToSquare} from '../../chessEngine/util';
 import SettingsModal from './Modals/SettingsModal';
 import PositionModal from './Modals/PositionModal';
 import PlayerInfo from './PlayerInfo';
@@ -67,6 +67,8 @@ export default function Analysis() {
         localStorage.setItem('orientation', newOrientation);
         _setOrientation(newOrientation);
     }
+
+    const [hint, setHint] = useState({});
     const [analysisResult, setAnalysisResult] = useState(null);
     const [waitingForAnalysisResult, _setWaitingForAnalysisResult] = useState(false);
     const waitingForAnalysisResultRef = useRef(false); // To be used in worker message handler
@@ -98,6 +100,11 @@ export default function Analysis() {
                         bestMove: e.data.data.move,
                         pvLine: e.data.data.pvLine
                     });
+                    const fromSquare = findFromSquare(game.current.board(), e.data.data.move, game.current.turn());
+                    const toSquare = findToSquare(e.data.data.move);
+                    const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
+                    const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
+                    setHint({from, to});
                     setWaitingForAnalysisResult(false);
                     setSearchProgress(0);
                     break;
@@ -276,6 +283,9 @@ export default function Analysis() {
         return success;
     }
 
+    // Passed to ChessBoard component to call after the hint has been shown
+    const onHintShown = useCallback(() => {setHint({})}, []);
+
     /********** JSX **********/
 
     return (
@@ -305,6 +315,8 @@ export default function Analysis() {
                         onMove = {onMove}
                         orientation = {orientation === 'w' ? 'white' : 'black'}
                         playerColor={game.current.turn()}
+                        hint = {hint}
+                        onHintShown = {onHintShown}
                         history={game.current.history({verbose: true})}
                         dimensionAdjustment = {{
                             width: {percent: 4},

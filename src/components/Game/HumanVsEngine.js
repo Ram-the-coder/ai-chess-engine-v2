@@ -39,7 +39,7 @@ function HumanVsEngine({
     const { searchDepth, maxDepth, evalCap } = options;
     const { setSearchDepth, setMaxDepth, setEvalCap } = setOptions;
 
-    const [history, setHistory] = useState([]); // Used as state -> condition on which to re-render on move
+    const [history, setHistory] = useState([]);
 
     const [playerColor, _setPlayerColor] = useState(localStorage.getItem('orientation') || 'w'); // Used to check whose turn it is (AI's or human's) and to set board orientation
     const playerColorRef = useRef('w'); // Used to access player color info in on message event handler
@@ -98,39 +98,9 @@ function HumanVsEngine({
         function handleWorkerMessage(e) {
             // console.log(e.data);
             switch(e.data.type) {
-                case 'search':{
-                    // AI's move     
-                    const { move } = e.data.data;
-                    chessEngine.move(move)
-                    const fromSquare = findFromSquare(game.current.board(), move, game.current.turn());
-                    const toSquare = findToSquare(move);
-                    const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
-                    const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
-                    game.current.move(move);
-                    setHistory(history => [...history, {move, from, to}]);
-                    setNeedToPlayMoveSound(true);
-                    setSearchProgress(0);
-                    break;
-                }
-                case 'hint':{
-                    // Hint from AI
-                    const { move } = e.data.data;
-                    if(!waitingForHintRef.current) return;
-                    const fromSquare = findFromSquare(game.current.board(), move, game.current.turn());
-                    const toSquare = findToSquare(move);
-                    const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
-                    const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
-                    setHint({from, to});
-                    setWaitingForHint(false);                
-                    setSearchProgress(0);
-                    break;
-                }
-                case 'search-update': {
-                    const { currentDepth, searchDepth } = e.data.data;
-                    setSearchProgress(Math.floor((sumTillN(currentDepth) * 100) / sumTillN(searchDepth)));
-                    break;
-                }
-
+                case 'search':return handleSearchResult(e); // AI's move
+                case 'hint': return handleHintResult(e);
+                case 'search-update': return handleSearchUpdate(e);
                 default: 
                     console.log("Unhandled message from worker", e.data);
                     break;
@@ -141,6 +111,36 @@ function HumanVsEngine({
 			// Delete the thread in which the chess engine ran
 			chessEngineWorker.current.terminate();
 		}
+
+        function handleHintResult(e) {
+            const { move } = e.data.data;
+            if(!waitingForHintRef.current) return;
+            const fromSquare = findFromSquare(game.current.board(), move, game.current.turn());
+            const toSquare = findToSquare(move);
+            const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
+            const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
+            setHint({ from, to });
+            setWaitingForHint(false);
+            setSearchProgress(0);
+        }
+
+        function handleSearchUpdate(e) {
+            const { currentDepth, searchDepth } = e.data.data;
+            setSearchProgress(Math.floor((sumTillN(currentDepth) * 100) / sumTillN(searchDepth)));
+        }
+
+        function handleSearchResult(e) {
+            const { move } = e.data.data;
+            chessEngine.move(move);
+            const fromSquare = findFromSquare(game.current.board(), move, game.current.turn());
+            const toSquare = findToSquare(move);
+            const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
+            const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
+            game.current.move(move);
+            setHistory(history => [...history, { move, from, to }]);
+            setNeedToPlayMoveSound(true);
+            setSearchProgress(0);
+        }
     }, []);
 
     // Fires after move - to play move sound
@@ -151,7 +151,6 @@ function HumanVsEngine({
         }
     }, [needToPlayMoveSound]);
 
-    
     // Fires after change in playerColor or history to let AI make its move if it is its turn
     useEffect(() => {
         setWaitingForHint(false);

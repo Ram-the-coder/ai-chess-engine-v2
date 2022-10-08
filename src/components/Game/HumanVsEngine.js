@@ -7,6 +7,7 @@ import SettingsModal from './Modals/SettingsModal';
 import GameoverModal from './Modals/GameoverModal';
 import PositionModal from './Modals/PositionModal';
 import PlayerInfo from './PlayerInfo';
+import { ControlBtnBlock, ControlBtnHalf } from './compUtils/compUtils';
 import ChessEngineWorker from '../../chessEngine/engine.worker';
 import MoveSound from '../../assets/Move.mp3';
 import NewGameSound from '../../assets/NewGame.mp3';
@@ -86,7 +87,7 @@ function HumanVsEngine({
         _setWaitingForHint(state);
     }
 
-    const [gameoverStatus, setGameoverStatus] = useState(0); // Contains 
+    const [gameStatus, setgameStatus] = useState(0); // Contains 
     const [needToPlayMoveSound, setNeedToPlayMoveSound] = useState(false); // Used to defer playing of move sound after render
 
 	const [openSettings, setOpenSettings] = useState(false); // State of AI settings modal
@@ -183,12 +184,12 @@ function HumanVsEngine({
         let gameOver, status;
         ({gameOver, status} = checkGameEnd(game.current));
         if(gameOver) {
-            setGameoverStatus(status);
+            setgameStatus(status);
             setOpenGameoverModal(true);
             return;
         }
 		// Let AI make the move if it is its turn
-        if(game.current.turn() !== playerColor) letAiMakeMove();
+        if(!isPlayersTurn()) letAiMakeMove();
 
     }, [playerColor, history, letAiMakeMove]);    
 
@@ -196,15 +197,15 @@ function HumanVsEngine({
     /********** Functions used by the component **********/
 
     function undoGame() {
-        if(game.current.turn() !== playerColor) return; // Disable undo while AI is thinking
+        if(!isPlayersTurn()) return; // Disable undo while AI is thinking
         setWaitingForHint(false);
         game.current.undo();
         chessEngineWorker.current.postMessage({type: 'undo'});
-        setGameoverStatus(0);
+        setgameStatus(0);
         setHistory(history => {
             let newHistory = [...history];
             newHistory.pop();
-            if(game.current.turn() !== playerColor) { // Undo the previous move of AI too
+            if(!isPlayersTurn()) { // Undo the previous move of AI too
 				game.current.undo();
 				chessEngineWorker.current.postMessage({type: 'undo'});
                 newHistory.pop();
@@ -215,11 +216,11 @@ function HumanVsEngine({
     }
 
     function newGame() {
-        if(gameoverStatus === 0 && !window.confirm("Are you sure that you want to reset the board?")) return;
+        if(gameStatus === 0 && !window.confirm("Are you sure that you want to reset the board?")) return;
 		game.current = new Chess();
 		chessEngineWorker.current.postMessage({type: 'reset'});
         setHistory([]);
-        setGameoverStatus(0);
+        setgameStatus(0);
         setOpenGameoverModal(false);
         setWaitingForHint(false);
         newGameAudio.current.play();
@@ -272,7 +273,7 @@ function HumanVsEngine({
     function renderGameoverModal() {
         return openGameoverModal && <GameoverModal 
             playerColor = {playerColor}
-            statusCode = {gameoverStatus}
+            statusCode = {gameStatus}
             startNewGame = {newGame}
             closeModal = {() => setOpenGameoverModal(false)}
         />
@@ -296,37 +297,48 @@ function HumanVsEngine({
         )
     }
 
+    function isGameOver() {
+        return gameStatus !== gameStatusCode.IN_PROGRESS
+    }
+
+    function isGameInProgress() {
+        return gameStatus === gameStatusCode.IN_PROGRESS
+    }
+
+
+    function isPlayersTurn() {
+        return game.current.turn() === playerColor
+    }
+
     function SideBar() {
+        const shouldDisableUndo = isGameOver() || !isPlayersTurn();
+        const shouldDisableNewGameButton = isGameInProgress() && !isPlayersTurn();
+        const shouldDisableShowHint = waitingForHint || isGameOver() || !isPlayersTurn();
+        const shouldDisableSwitchSides = isGameOver() || !isPlayersTurn();
+        const shouldDisableGetPosition = history.length === 0
+        const getHintButtonText = () => !waitingForHint ? 'Hint' : `Analyzing...(${searchProgress}%)`
+        const openSettings = () => setOpenSettings(true)
+        const getPng = () => setGetPosition({format: 'PGN'})
+        const getFen = () => setGetPosition({format: 'FEN'})
+        const pointsBalance = calculatePointsByPiece(game.current.board())
         return (
             <div className="sidebar">
                 <div className="controls">
-                    <button className="btn btn-dark controls-half-width" 
-                            onClick={() => undoGame()} 
-                            disabled={(gameoverStatus !== 0) || (game.current.turn() !== playerColor)}>Undo</button>
-                    <button className="btn btn-dark controls-half-width"
-                            onClick={() => newGame()} 
-                            disabled={(gameoverStatus === 0) && (game.current.turn() !== playerColor)}>New Game</button>
-                    <button className="btn btn-dark controls-half-width"
-                            onClick={() => showHint()} 
-                            disabled={(waitingForHint) || (gameoverStatus !== 0) || (game.current.turn() !== playerColor)}
-                    >
-                            {!waitingForHint ? 'Hint' : `Analyzing...(${searchProgress}%)` }
-                    </button>
-                    <button className="btn btn-dark controls-half-width"
-                            onClick={() => switchSides()} 
-                            disabled={(gameoverStatus !== 0) || (game.current.turn() !== playerColor)}>Switch Sides</button>
-                    <button className="btn btn-dark btn-block" 
-                            onClick={() => setOpenSettings(true)}>AI Settings</button>
+                    <ControlBtnHalf onClick={undoGame} disabled={shouldDisableUndo}>Undo</ControlBtnHalf>
+                    <ControlBtnHalf onClick={newGame} disabled={shouldDisableNewGameButton}>New Game</ControlBtnHalf>
+                    <ControlBtnHalf onClick={showHint} disabled={shouldDisableShowHint}>{getHintButtonText()}</ControlBtnHalf>
+                    <ControlBtnHalf onClick={switchSides} disabled={shouldDisableSwitchSides}>Switch Sides</ControlBtnHalf>
+                    <ControlBtnBlock onClick={openSettings}>AI Settings</ControlBtnBlock>
                     <hr className='hr' />
                 </div>
 				<div className="text-center">
-                    <span className="sidebar-heading">{'Points balance: '}</span>{calculatePointsByPiece(game.current.board())}
+                    <span className="sidebar-heading">{`Points balance: ${pointsBalance}`}</span>
                     <hr className='hr' />
                 </div>
                 <MoveHistory history={history} currentPosition={history.length-1} />
                 <div className="controls">
-                    <button className="btn btn-dark controls-half-width" onClick={() => setGetPosition({format: 'PGN'})} disabled = {history.length === 0}>Get PGN</button>
-                    <button className="btn btn-dark controls-half-width" onClick={() => setGetPosition({format: 'FEN'})} disabled = {history.length === 0}>Get FEN</button>
+                    <ControlBtnHalf onClick={getPng} disabled={shouldDisableGetPosition}>Get PGN</ControlBtnHalf>
+                    <ControlBtnHalf onClick={getFen} disabled={shouldDisableGetPosition}>Get FEN</ControlBtnHalf>
                 </div>
             </div>
         )
@@ -336,7 +348,7 @@ function HumanVsEngine({
         <div className="game">
             <Modals />
             <div className="bounding-box">
-                <PlayerInfo name="AI" isThinking={(gameoverStatus === 0) && (game.current.turn() !== playerColor)} thinkingText={`AI is Thinking...(${searchProgress}%)`} />
+                <PlayerInfo name="AI" isThinking={isGameInProgress() && !isPlayersTurn()} thinkingText={`AI is Thinking...(${searchProgress}%)`} />
                 <div className="chessboard-wrapper">
                     <ChessBoard 
                         id="vsAI"
@@ -353,7 +365,7 @@ function HumanVsEngine({
                         }}
                     />
                 </div>
-                <PlayerInfo name="You" isThinking={(gameoverStatus === 0) && (game.current.turn() === playerColor)} thinkingText="Your Turn" />
+                <PlayerInfo name="You" isThinking={isGameInProgress() && (game.current.turn() === playerColor)} thinkingText="Your Turn" />
             </div>
             <SideBar />
             <audio ref={newGameAudio} src={NewGameSound} />
@@ -366,7 +378,8 @@ function HumanVsEngine({
 
 /********** Functions that are independant of state and props **********/
 
-const gameEndStatusCode = {
+const gameStatusCode = {
+    IN_PROGRESS: 0,
 	CHECKMATE_BY_WHITE: 1,
 	CHECKMATE_BY_BLACK: 2,
 	STALEMATE: 3,
@@ -379,15 +392,15 @@ function checkGameEnd(game) {
 	let gameOver = true;
 	let status;
 	if(game.in_checkmate()) {
-		status = game.turn() === 'b' ? gameEndStatusCode.CHECKMATE_BY_WHITE : gameEndStatusCode.CHECKMATE_BY_BLACK;
+		status = game.turn() === 'b' ? gameStatusCode.CHECKMATE_BY_WHITE : gameStatusCode.CHECKMATE_BY_BLACK;
 	} else if(game.in_stalemate()) { 
-		status = gameEndStatusCode.STALEMATE;
+		status = gameStatusCode.STALEMATE;
 	} else if(game.in_threefold_repetition()) {
-		status = gameEndStatusCode.THREEFOLD_REP;
+		status = gameStatusCode.THREEFOLD_REP;
 	} else if(game.insufficient_material()) {
-		status = gameEndStatusCode.INSUFFICIENT_MAT;
+		status = gameStatusCode.INSUFFICIENT_MAT;
 	} else if(game.in_draw()) {
-		status = gameEndStatusCode.FIFTY_MOVE;
+		status = gameStatusCode.FIFTY_MOVE;
 	} else {
 		gameOver = false;
 	}

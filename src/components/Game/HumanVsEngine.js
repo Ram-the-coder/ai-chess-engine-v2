@@ -8,15 +8,12 @@ import PositionModal from './Modals/PositionModal';
 import PlayerInfo from './PlayerInfo';
 import { ControlBtnBlock, ControlBtnHalf } from './compUtils/compUtils';
 import ChessEngineWorker from '../../chessEngine/engine.worker';
-import MoveSound from '../../assets/Move.mp3';
-import NewGameSound from '../../assets/NewGame.mp3';
-import UndoSound from '../../assets/Undo.mp3';
-import SwitchSound from '../../assets/Switch.mp3';
 import ChessGame from './ChessGame'
 
 import './Game.css';
 import { chessEngineInterface, handleWorkerMessage } from './workerInterface';
 import useSearchEngineOptions from './useSearchEngineOptions';
+import useAudio from './useAudio';
 
 
 function HumanVsEngine({ 
@@ -65,10 +62,7 @@ function HumanVsEngine({
     const [openGameoverModal, setOpenGameoverModal ] = useState(false);
     const [getPosition, setGetPosition] = useState(null); 
     
-    const moveAudio = useRef(null);
-    const newGameAudio = useRef(null);
-    const undoAudio = useRef(null);
-    const switchAudio = useRef(null); 
+    const { playMoveAudio, playNewGameAudio, playUndoAudio, playSwitchAudio, renderAudioElements } = useAudio();
 
     function onHintResult(move) {
         if(!waitingForHintRef.current) return;
@@ -93,7 +87,7 @@ function HumanVsEngine({
         const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
         game.current.move(move);
         setHistory(history => [...history, { move, from, to }]);
-        moveAudio.current.play(); 
+        playMoveAudio(); 
         setSearchProgress(0);
     }
 
@@ -102,12 +96,11 @@ function HumanVsEngine({
 
     const letAiMakeMove = useCallback(
         () => {
-            const searchData = {
+            setTimeout(() => chessEngine.search({
                 searchDepth,
                 evalCap,
                 maxPly: maxDepth
-            };
-            setTimeout(() => chessEngine.search(searchData), 250);
+            }), 250);
         }, 
         [searchDepth, evalCap, maxDepth]
     ); 
@@ -160,7 +153,7 @@ function HumanVsEngine({
             }
             return newHistory;
         });
-        undoAudio.current.play();
+        playUndoAudio();
     }
 
     function newGame() {
@@ -171,7 +164,7 @@ function HumanVsEngine({
         setgameStatus(0);
         setOpenGameoverModal(false);
         setWaitingForHint(false);
-        newGameAudio.current.play();
+        playNewGameAudio();
     }
 
     function showHint() {
@@ -187,14 +180,14 @@ function HumanVsEngine({
     function switchSides() {
         setWaitingForHint(false);
         setPlayerColor(playerColor === 'w' ? 'b' : 'w');
-        switchAudio.current.play();
+        playSwitchAudio();
     }
 
     
     // Passed to ChessBoard component to call on move
     function updateGameState(newMove) {
         setWaitingForHint(false);
-        moveAudio.current.play(); 
+        playMoveAudio(); 
         setHistory(history => [...history, newMove]);
         chessEngine.move(newMove.move);
     }
@@ -315,10 +308,7 @@ function HumanVsEngine({
                 <PlayerInfo name="You" isThinking={isGameInProgress() && (game.current.turn() === playerColor)} thinkingText="Your Turn" />
             </div>
             <SideBar />
-            <audio ref={newGameAudio} src={NewGameSound} />
-            <audio ref={moveAudio} src={MoveSound} />
-            <audio ref={undoAudio} src={UndoSound} />
-            <audio ref={switchAudio} src={SwitchSound} />
+            {renderAudioElements()}
         </div>
     );
 }

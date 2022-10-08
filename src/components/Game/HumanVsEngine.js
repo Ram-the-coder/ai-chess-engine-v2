@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import ChessBoard from '../ChessBoard/ChessBoard';
-import ChessJS from 'chess.js';
 import {calculatePointsByPiece, findFromSquare, findToSquare} from '../../chessEngine/util';
 import MoveHistory from './MoveHistory';
 import SettingsModal from './Modals/SettingsModal';
@@ -13,12 +12,13 @@ import MoveSound from '../../assets/Move.mp3';
 import NewGameSound from '../../assets/NewGame.mp3';
 import UndoSound from '../../assets/Undo.mp3';
 import SwitchSound from '../../assets/Switch.mp3';
+import ChessGame from './ChessGame'
 
 import './Game.css';
 
 function HumanVsEngine({ 
     createChessEnginerWorker = () => new ChessEngineWorker() ,
-    Chess = ChessJS
+    getNewChessGame = ChessGame.getNewChessGame
 }) {
 
     /********** States and Refs **********/
@@ -26,7 +26,7 @@ function HumanVsEngine({
 	// game - used to store game state, generate moves, etc.
 	// Can't be set as state as it has many hidden attributes that change when using its methods.
 	// So we can't make ues of setState on game
-    const game = useRef(new Chess());
+    const game = useRef(getNewChessGame());
 	const chessEngineWorker = useRef(); // The worker thread
 	// The worker thread is initialized in the useEffect function as for some reason using useRef to initialize causes it 
     // to initialize more than once - in result creating more than one worker thread
@@ -217,7 +217,7 @@ function HumanVsEngine({
 
     function newGame() {
         if(gameStatus === 0 && !window.confirm("Are you sure that you want to reset the board?")) return;
-		game.current = new Chess();
+		game.current = getNewChessGame();
 		chessEngineWorker.current.postMessage({type: 'reset'});
         setHistory([]);
         setgameStatus(0);
@@ -322,7 +322,7 @@ function HumanVsEngine({
         const getFen = () => setGetPosition({format: 'FEN'})
         const pointsBalance = calculatePointsByPiece(game.current.board())
         return (
-            <div className="sidebar">
+            <div className="sidebar" data-testid="sidebar">
                 <div className="controls">
                     <ControlBtnHalf onClick={undoGame} disabled={shouldDisableUndo}>Undo</ControlBtnHalf>
                     <ControlBtnHalf onClick={newGame} disabled={shouldDisableNewGameButton}>New Game</ControlBtnHalf>
@@ -345,11 +345,11 @@ function HumanVsEngine({
     }
 
 	return (
-        <div className="game">
+        <div className="game" data-testid="game-container">
             <Modals />
-            <div className="bounding-box">
+            <div className="bounding-box" data-testid="main-board">
                 <PlayerInfo name="AI" isThinking={isGameInProgress() && !isPlayersTurn()} thinkingText={`AI is Thinking...(${searchProgress}%)`} />
-                <div className="chessboard-wrapper">
+                <div className="chessboard-wrapper" data-testid="chessboard-wrapper">
                     <ChessBoard 
                         id="vsAI"
                         game = {game.current}

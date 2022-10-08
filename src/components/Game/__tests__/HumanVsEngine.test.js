@@ -12,7 +12,7 @@ const getTestChessEngineWorkerCreator = () => {
     return mock;
 }
 
-function getMockChessJS() {
+function getMockChessGame() {
     return ChessJS.Chess
 }
 
@@ -21,8 +21,10 @@ describe('Human vs Engine', () => {
         render(
             <HumanVsEngine 
                 createChessEnginerWorker={getTestChessEngineWorkerCreator()} 
-                Chess={getMockChessJS()}
-            />)
-        console.log(screen.debug())
+                getNewChessGame={getMockChessGame()}
+            />);
+        ['game-container', 'main-board', 'chessboard-wrapper', 'sidebar'].forEach(elementTestId => {
+            expect(screen.getByTestId(elementTestId)).toBeTruthy();
+        });
     })
 })

@@ -15,7 +15,7 @@ import SwitchSound from '../../assets/Switch.mp3';
 import ChessGame from './ChessGame'
 
 import './Game.css';
-import { chessEngineInterface } from './workerInterface';
+import { chessEngineInterface, handleWorkerMessage } from './workerInterface';
 import useSearchEngineOptions from './useSearchEngineOptions';
 
 
@@ -70,6 +70,33 @@ function HumanVsEngine({
     const undoAudio = useRef(null);
     const switchAudio = useRef(null); 
 
+    function onHintResult(move) {
+        if(!waitingForHintRef.current) return;
+        const fromSquare = findFromSquare(game.current.board(), move, game.current.turn());
+        const toSquare = findToSquare(move);
+        const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
+        const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
+        setHint({ from, to });
+        setWaitingForHint(false);
+        setSearchProgress(0);
+    }
+
+    function onSearchProgress(completedPercent) {
+        setSearchProgress(completedPercent);
+    }
+
+    function onAiMoveDecision(move) {
+        chessEngine.move(move);
+        const fromSquare = findFromSquare(game.current.board(), move, game.current.turn());
+        const toSquare = findToSquare(move);
+        const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
+        const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
+        game.current.move(move);
+        setHistory(history => [...history, { move, from, to }]);
+        moveAudio.current.play(); 
+        setSearchProgress(0);
+    }
+
 
     /********** Memoized functions **********/
 
@@ -91,54 +118,11 @@ function HumanVsEngine({
     useEffect(() => {
 		// Instantiate the thread in which the chess engine will run
         chessEngineWorker.current = createChessEnginerWorker();
-        chessEngineWorker.current.onmessage = handleWorkerMessage;
+        chessEngineWorker.current.onmessage = e => handleWorkerMessage(e, { onAiMoveDecision, onHintResult, onSearchProgress });
         chessEngine.init();
-
-        function handleWorkerMessage(e) {
-            // console.log(e.data);
-            switch(e.data.type) {
-                case 'search':return handleSearchResult(e); // AI's move
-                case 'hint': return handleHintResult(e);
-                case 'search-update': return handleSearchUpdate(e);
-                default: 
-                    console.log("Unhandled message from worker", e.data);
-                    break;
-            }
-        }
-
         return function cleanup() {
-			// Delete the thread in which the chess engine ran
-			chessEngineWorker.current.terminate();
-		}
-
-        function handleHintResult(e) {
-            const { move } = e.data.data;
-            if(!waitingForHintRef.current) return;
-            const fromSquare = findFromSquare(game.current.board(), move, game.current.turn());
-            const toSquare = findToSquare(move);
-            const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
-            const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
-            setHint({ from, to });
-            setWaitingForHint(false);
-            setSearchProgress(0);
-        }
-
-        function handleSearchUpdate(e) {
-            const { currentDepth, searchDepth } = e.data.data;
-            setSearchProgress(Math.floor((sumTillN(currentDepth) * 100) / sumTillN(searchDepth)));
-        }
-
-        function handleSearchResult(e) {
-            const { move } = e.data.data;
-            chessEngine.move(move);
-            const fromSquare = findFromSquare(game.current.board(), move, game.current.turn());
-            const toSquare = findToSquare(move);
-            const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
-            const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
-            game.current.move(move);
-            setHistory(history => [...history, { move, from, to }]);
-            moveAudio.current.play(); 
-            setSearchProgress(0);
+            // Delete the thread in which the chess engine ran
+            chessEngineWorker.current.terminate();
         }
     }, []);
 
@@ -368,10 +352,6 @@ function checkGameEnd(game) {
 		gameOver = false;
 	}
 	return {gameOver, status};
-}
-
-function sumTillN(n) {
-    return (n*(n+1))/2;
 }
 
 export default HumanVsEngine;

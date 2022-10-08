@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import ChessBoard from '../ChessBoard/ChessBoard';
-import Chess from 'chess.js';
+import ChessJS from 'chess.js';
 import {calculatePointsByPiece, findFromSquare, findToSquare} from '../../chessEngine/util';
 import MoveHistory from './MoveHistory';
 import SettingsModal from './Modals/SettingsModal';
@@ -15,8 +15,10 @@ import SwitchSound from '../../assets/Switch.mp3';
 
 import './Game.css';
 
-
-function HumanVsEngine() {
+function HumanVsEngine({ 
+    createChessEnginerWorker = () => new ChessEngineWorker() ,
+    Chess = ChessJS
+}) {
 
     /********** States and Refs **********/
 
@@ -116,7 +118,7 @@ function HumanVsEngine() {
 
     useEffect(() => {
 		// Instantiate the thread in which the chess engine will run
-        chessEngineWorker.current = new ChessEngineWorker();
+        chessEngineWorker.current = createChessEnginerWorker();
         chessEngineWorker.current.onmessage = handleWorkerMessage;
         chessEngineWorker.current.postMessage({type:'init'});
 
@@ -255,57 +257,47 @@ function HumanVsEngine() {
 
     /********** JSX **********/
 
-	return (
-        <div className="game">
-            {
-                openSettings && 
-                <SettingsModal 
-                    searchDepth = {searchDepth}
-                    setSearchDepth = {setSearchDepth}
-                    maxDepth = {maxDepth}
-                    setMaxDepth = {setMaxDepth}
-                    evalCap = {evalCap}
-                    setEvalCap = {setEvalCap}
-                    setOpenSettings = {setOpenSettings}
-                />
-            }
-            {
-                openGameoverModal &&
-                <GameoverModal 
-                    playerColor = {playerColor}
-                    statusCode = {gameoverStatus}
-                    startNewGame = {newGame}
-                    closeModal = {() => setOpenGameoverModal(false)}
-                />
-            }
-            {
-                getPosition &&
-                <PositionModal
-                    position = {getPosition.format === 'PGN' ? game.current.pgn() : game.current.fen()} 
-                    positionFormat = {getPosition.format}
-                    closeModal = {() => setGetPosition(null)}
-                />
-            }
-            <div className="bounding-box">
-                <PlayerInfo name="AI" isThinking={(gameoverStatus === 0) && (game.current.turn() !== playerColor)} thinkingText={`AI is Thinking...(${searchProgress}%)`} />
-                <div className="chessboard-wrapper">
-                    <ChessBoard 
-                        id="vsAI"
-                        game = {game.current}
-                        history = {history}
-                        playerColor = {playerColor}
-                        onMove = {updateGameState}
-                        orientation = {playerColor === 'w' ? 'white' : 'black'}
-                        hint = {hint}
-                        onHintShown = {onHintShown}
-                        dimensionAdjustment = {{
-                            width: {percent: 4},
-                            height: {pixel: 84}
-                        }}
-                    />
-                </div>
-                <PlayerInfo name="You" isThinking={(gameoverStatus === 0) && (game.current.turn() === playerColor)} thinkingText="Your Turn" />
-            </div>
+    function renderSettingsModal() {
+        return openSettings && <SettingsModal 
+            searchDepth = {searchDepth}
+            setSearchDepth = {setSearchDepth}
+            maxDepth = {maxDepth}
+            setMaxDepth = {setMaxDepth}
+            evalCap = {evalCap}
+            setEvalCap = {setEvalCap}
+            setOpenSettings = {setOpenSettings}
+        />
+    }
+
+    function renderGameoverModal() {
+        return openGameoverModal && <GameoverModal 
+            playerColor = {playerColor}
+            statusCode = {gameoverStatus}
+            startNewGame = {newGame}
+            closeModal = {() => setOpenGameoverModal(false)}
+        />
+    }
+
+    function renderPositionModal() {
+        return getPosition && <PositionModal
+            position = {getPosition.format === 'PGN' ? game.current.pgn() : game.current.fen()} 
+            positionFormat = {getPosition.format}
+            closeModal = {() => setGetPosition(null)}
+        />
+    }
+
+    function Modals() {
+        return (
+            <>
+            {renderSettingsModal()}
+            {renderGameoverModal()}
+            {renderPositionModal()}
+            </>
+        )
+    }
+
+    function SideBar() {
+        return (
             <div className="sidebar">
                 <div className="controls">
                     <button className="btn btn-dark controls-half-width" 
@@ -337,6 +329,33 @@ function HumanVsEngine() {
                     <button className="btn btn-dark controls-half-width" onClick={() => setGetPosition({format: 'FEN'})} disabled = {history.length === 0}>Get FEN</button>
                 </div>
             </div>
+        )
+    }
+
+	return (
+        <div className="game">
+            <Modals />
+            <div className="bounding-box">
+                <PlayerInfo name="AI" isThinking={(gameoverStatus === 0) && (game.current.turn() !== playerColor)} thinkingText={`AI is Thinking...(${searchProgress}%)`} />
+                <div className="chessboard-wrapper">
+                    <ChessBoard 
+                        id="vsAI"
+                        game = {game.current}
+                        history = {history}
+                        playerColor = {playerColor}
+                        onMove = {updateGameState}
+                        orientation = {playerColor === 'w' ? 'white' : 'black'}
+                        hint = {hint}
+                        onHintShown = {onHintShown}
+                        dimensionAdjustment = {{
+                            width: {percent: 4},
+                            height: {pixel: 84}
+                        }}
+                    />
+                </div>
+                <PlayerInfo name="You" isThinking={(gameoverStatus === 0) && (game.current.turn() === playerColor)} thinkingText="Your Turn" />
+            </div>
+            <SideBar />
             <audio ref={newGameAudio} src={NewGameSound} />
             <audio ref={moveAudio} src={MoveSound} />
             <audio ref={undoAudio} src={UndoSound} />

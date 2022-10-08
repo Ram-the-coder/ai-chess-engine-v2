@@ -15,6 +15,8 @@ import SwitchSound from '../../assets/Switch.mp3';
 import ChessGame from './ChessGame'
 
 import './Game.css';
+import { chessEngineInterface } from './workerInterface';
+
 
 function HumanVsEngine({ 
     createChessEnginerWorker = () => new ChessEngineWorker() ,
@@ -30,7 +32,7 @@ function HumanVsEngine({
 	const chessEngineWorker = useRef(); // The worker thread
 	// The worker thread is initialized in the useEffect function as for some reason using useRef to initialize causes it 
     // to initialize more than once - in result creating more than one worker thread
-
+    const chessEngine = chessEngineInterface(chessEngineWorker)
     
     const [searchDepth, _setSearchDepth] = useState(parseInt(localStorage.getItem('searchDepth')) || 3); // Search engine-related state
     const [maxDepth, _setMaxDepth] = useState(parseInt(localStorage.getItem('maxDepth')) || 3); // Search engine-related state
@@ -39,9 +41,9 @@ function HumanVsEngine({
     // Save any changes to AI settings to localstorage
     const setSearchDepth = (newDepth) => {
         if(searchDepth < newDepth) {
-            chessEngineWorker.current.postMessage({type: 'init'});
+            chessEngine.init();
             const pgn = game.current.pgn();
-            chessEngineWorker.current.postMessage({type: 'set-pgn', data: pgn});
+            chessEngine.setPgn(pgn);
         }
         _setSearchDepth(newDepth);
         localStorage.setItem('searchDepth', newDepth);
@@ -49,9 +51,9 @@ function HumanVsEngine({
 
     const setMaxDepth = (newDepth) => {
         if(maxDepth < newDepth) {
-            chessEngineWorker.current.postMessage({type: 'init'});
+            chessEngine.init();
             const pgn = game.current.pgn(); 
-            chessEngineWorker.current.postMessage({type: 'set-pgn', data: pgn});
+            chessEngine.setPgn(pgn);
         }
         _setMaxDepth(newDepth);
         localStorage.setItem('maxDepth', newDepth);
@@ -59,9 +61,9 @@ function HumanVsEngine({
 
     const setEvalCap = (newCap) => {
         if(evalCap < newCap) {
-            chessEngineWorker.current.postMessage({type: 'init'});
+            chessEngine.init();
             const pgn = game.current.pgn();
-            chessEngineWorker.current.postMessage({type: 'set-pgn', data: pgn});
+            chessEngine.setPgn(pgn);
         }
         _setEvalCap(newCap);
         localStorage.setItem('evalCap', newCap);
@@ -109,7 +111,7 @@ function HumanVsEngine({
                 evalCap,
                 maxPly: maxDepth
             };
-            setTimeout(() => chessEngineWorker.current.postMessage({type: 'search', data: searchData}), 250);
+            setTimeout(() => chessEngine.search(searchData), 250);
         }, 
         [searchDepth, evalCap, maxDepth]
     ); 
@@ -121,29 +123,31 @@ function HumanVsEngine({
 		// Instantiate the thread in which the chess engine will run
         chessEngineWorker.current = createChessEnginerWorker();
         chessEngineWorker.current.onmessage = handleWorkerMessage;
-        chessEngineWorker.current.postMessage({type:'init'});
+        chessEngine.init();
 
         function handleWorkerMessage(e) {
             // console.log(e.data);
             switch(e.data.type) {
                 case 'search':{
-                    // AI's move                    
-                    chessEngineWorker.current.postMessage({type: 'move', data: e.data.data.move});
-                    const fromSquare = findFromSquare(game.current.board(), e.data.data.move, game.current.turn());
-                    const toSquare = findToSquare(e.data.data.move);
+                    // AI's move     
+                    const { move } = e.data.data;
+                    chessEngine.move(move)
+                    const fromSquare = findFromSquare(game.current.board(), move, game.current.turn());
+                    const toSquare = findToSquare(move);
                     const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
                     const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
-                    game.current.move(e.data.data.move);
-                    setHistory(history => [...history, {move: e.data.data.move, from, to}]);
+                    game.current.move(move);
+                    setHistory(history => [...history, {move, from, to}]);
                     setNeedToPlayMoveSound(true);
                     setSearchProgress(0);
                     break;
                 }
                 case 'hint':{
                     // Hint from AI
+                    const { move } = e.data.data;
                     if(!waitingForHintRef.current) return;
-                    const fromSquare = findFromSquare(game.current.board(), e.data.data.move, game.current.turn());
-                    const toSquare = findToSquare(e.data.data.move);
+                    const fromSquare = findFromSquare(game.current.board(), move, game.current.turn());
+                    const toSquare = findToSquare(move);
                     const from = String.fromCharCode(fromSquare.j + 97) + String(8 - fromSquare.i);
                     const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
                     setHint({from, to});
@@ -152,8 +156,8 @@ function HumanVsEngine({
                     break;
                 }
                 case 'search-update': {
-                    const curDepth = e.data.data.currentDepth;
-                    setSearchProgress(Math.floor((sumTillN(curDepth) * 100) / sumTillN(e.data.data.searchDepth)));
+                    const { currentDepth, searchDepth } = e.data.data;
+                    setSearchProgress(Math.floor((sumTillN(currentDepth) * 100) / sumTillN(searchDepth)));
                     break;
                 }
 
@@ -200,14 +204,14 @@ function HumanVsEngine({
         if(!isPlayersTurn()) return; // Disable undo while AI is thinking
         setWaitingForHint(false);
         game.current.undo();
-        chessEngineWorker.current.postMessage({type: 'undo'});
+        chessEngine.undo();
         setgameStatus(0);
         setHistory(history => {
             let newHistory = [...history];
             newHistory.pop();
             if(!isPlayersTurn()) { // Undo the previous move of AI too
 				game.current.undo();
-				chessEngineWorker.current.postMessage({type: 'undo'});
+				chessEngine.undo();
                 newHistory.pop();
             }
             return newHistory;
@@ -218,7 +222,7 @@ function HumanVsEngine({
     function newGame() {
         if(gameStatus === 0 && !window.confirm("Are you sure that you want to reset the board?")) return;
 		game.current = getNewChessGame();
-		chessEngineWorker.current.postMessage({type: 'reset'});
+		chessEngine.reset();
         setHistory([]);
         setgameStatus(0);
         setOpenGameoverModal(false);
@@ -228,12 +232,11 @@ function HumanVsEngine({
 
     function showHint() {
         if(waitingForHint) return;
-		const searchData = {
+        chessEngine.hint({
             searchDepth,
             evalCap,
             maxPly: maxDepth
-        }
-        chessEngineWorker.current.postMessage({type: 'hint', data: searchData});
+        });
         setWaitingForHint(true);
     }
 
@@ -249,7 +252,7 @@ function HumanVsEngine({
         setWaitingForHint(false);
         setNeedToPlayMoveSound(true);
         setHistory(history => [...history, newMove]);
-        chessEngineWorker.current.postMessage({type: 'move', data: newMove.move});
+        chessEngine.move(newMove.move);
     }
 
     // Passed to ChessBoard component to call after the hint has been shown

@@ -60,7 +60,6 @@ function HumanVsEngine({
     }
 
     const [gameStatus, setgameStatus] = useState(0); // Contains 
-    const [needToPlayMoveSound, setNeedToPlayMoveSound] = useState(false); // Used to defer playing of move sound after render
 
 	const [openSettings, setOpenSettings] = useState(false); // State of AI settings modal
     const [openGameoverModal, setOpenGameoverModal ] = useState(false);
@@ -138,18 +137,10 @@ function HumanVsEngine({
             const to = String.fromCharCode(toSquare.j + 97) + String(8 - toSquare.i);
             game.current.move(move);
             setHistory(history => [...history, { move, from, to }]);
-            setNeedToPlayMoveSound(true);
+            moveAudio.current.play(); 
             setSearchProgress(0);
         }
     }, []);
-
-    // Fires after move - to play move sound
-    useEffect(() => {
-        if(needToPlayMoveSound) {
-            moveAudio.current.play(); 
-            setNeedToPlayMoveSound(false);
-        }
-    }, [needToPlayMoveSound]);
 
     // Fires after change in playerColor or history to let AI make its move if it is its turn
     useEffect(() => {
@@ -219,7 +210,7 @@ function HumanVsEngine({
     // Passed to ChessBoard component to call on move
     function updateGameState(newMove) {
         setWaitingForHint(false);
-        setNeedToPlayMoveSound(true);
+        moveAudio.current.play(); 
         setHistory(history => [...history, newMove]);
         chessEngine.move(newMove.move);
     }

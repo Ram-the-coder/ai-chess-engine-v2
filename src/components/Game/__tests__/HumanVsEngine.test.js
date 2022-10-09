@@ -93,7 +93,7 @@ describe.only('Chess Engine', () => {
         expect(postMessageMock.mock.calls.filter(isMoveType('search'))[0][0]).toEqual({type: 'search', data: {
             searchDepth: 3,
             maxPly: 3,
-            evalCap: 
+            evalCap: 15000
         }});
     })
 })

@@ -20,21 +20,18 @@ const game4 = new Chess();
 game4.load("1rbqkb1r/pppppppp/5n2/8/3n1B2/2NP4/PPPQPPPP/R3KBNR w KQk - 0 1");
 const board4 = game4.board();
 const hash4 = zobristHash.computeZobristHash(board4);
-// console.log("hash4: " + hash4);
 game4.move("O-O-O");
 
 const game5 = new Chess();
 game5.load("r1bqkbnr/ppppBppp/2n5/8/4P3/3P4/PPP2PPP/RN1QKBNR b KQkq - 0 1");
 const board5 = game5.board();
 const hash5 = zobristHash.computeZobristHash(board5);
-// console.log("hash5: " + hash5);
 game5.move("Ncxe7");
 
 const game6 = new Chess();
 game6.load("1rb3k1/pp1p1p1p/3R4/2p3P1/8/2N2PP1/PPP1r3/2K3NR w - - 1 18");
 const board6 = game6.board();
 const hash6 = zobristHash.computeZobristHash(board6);
-console.log("hash6: " + hash6);
 game6.move("Rhh6");
 
 
@@ -103,7 +100,6 @@ const recomputeTestCases = [
 recomputeTestCases.forEach(testCase => {
 	test('Recompute Zob Hash ' + testCase.test[2], () => {
 		const hash = zobristHash.recomputeZobristHash(...testCase.test);
-		console.log(testCase.test[2], hash);
 		expect(hash).toBe(testCase.expected);		
 	})
 })
